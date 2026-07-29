@@ -1,4 +1,4 @@
-﻿using EplanDevice;
+using EplanDevice;
 using IO;
 using System.Collections.Generic;
 using System.IO;
@@ -212,7 +212,7 @@ namespace EasyEPlanner
         {
             try
             {
-                string path = Path.Combine(OriginalAssemblyPath, StaticHelper.CommonConst.ConfigFileName);
+                string path = Path.Combine(GetOriginalAssemblyPath(), StaticHelper.CommonConst.ConfigFileName);
 
                 PInvoke.IniFile iniFile = new PInvoke.IniFile(path);
                 // Поиск файла .ini
@@ -267,7 +267,7 @@ namespace EasyEPlanner
         {
             try
             {
-                string path = Path.Combine(OriginalAssemblyPath, StaticHelper.CommonConst.ConfigFileName);
+                string path = Path.Combine(GetOriginalAssemblyPath(), StaticHelper.CommonConst.ConfigFileName);
 
                 PInvoke.IniFile iniFile = new PInvoke.IniFile(path);
                 if (File.Exists(path))
@@ -375,7 +375,7 @@ namespace EasyEPlanner
                 File.Exists(SpirePDFPath) == false)
             {
                 var files = new string[] { spireLicense, spireXLS, spirePDF };
-                CopySpireXLSFiles(AssemblyPath, files, OriginalAssemblyPath);
+                CopySpireXLSFiles(AssemblyPath, files, GetOriginalAssemblyPath());
             }
         }
 
@@ -725,7 +725,7 @@ namespace EasyEPlanner
         public string GetOstisHelpSystemLink()
         {
             var configFile = new PInvoke.IniFile(Path.Combine(
-                OriginalAssemblyPath, 
+                GetOriginalAssemblyPath(),
                 StaticHelper.CommonConst.ConfigFileName));
             string link = configFile.ReadString("helpSystem", "address", null);
             if (string.IsNullOrEmpty(link))
@@ -742,7 +742,7 @@ namespace EasyEPlanner
         public string GetOstisHelpSystemMainPageLink()
         {
             var configFile = new PInvoke.IniFile(Path.Combine(
-                OriginalAssemblyPath,
+                GetOriginalAssemblyPath(),
                 StaticHelper.CommonConst.ConfigFileName));
             string link = configFile.ReadString("helpSystem", "mainAddress ", 
                 null);
@@ -785,7 +785,7 @@ namespace EasyEPlanner
                 string projectName = eProjectManager.GetCurrentProjectName();
                 string projectsFolderPath = GetPtusaProjectsPath(projectName);
                 string projectFilesPath = Path.Combine(projectsFolderPath, projectName);
-                bool foldersCreated = pxcConfiguration.CreateFolders(OriginalAssemblyPath, projectFilesPath);
+                bool foldersCreated = pxcConfiguration.CreateFolders(GetOriginalAssemblyPath(), projectFilesPath);
                 oProgress.EndPart();
 
                 oProgress.BeginPart(50, "Прибиваем обои и читаем шаблоны");
@@ -836,7 +836,20 @@ namespace EasyEPlanner
         /// Путь к надстройке, к месту, из которого она подключалась к программе
         /// инженером.
         /// </summary>
-        public string OriginalAssemblyPath => Path.GetDirectoryName(AddInModule.OriginalAssemblyPath);
+        public string OriginalAssemblyPath
+        {
+            get
+            {
+                return originalAssemblyPath ??
+                    Path.GetDirectoryName(AddInModule.OriginalAssemblyPath);
+            }
+            set
+            {
+                originalAssemblyPath = value;
+            }
+        }
+
+        private string originalAssemblyPath;
 
         /// <summary>
         /// Название папки с системными скриптами
@@ -872,26 +885,37 @@ namespace EasyEPlanner
         }
 
         /// <summary>
-        /// Путь к системным файлам Lua по месту подключения надстройки
+        /// Путь к системным файлам Lua по месту подключения надстройки.
+        /// Используется непубличное поле originalAssemblyPath, чтобы в
+        /// standalone-режиме не обращаться к AddInModule (а значит, к сборкам
+        /// EPLAN).
         /// </summary>
-        public string OriginalSystemFilesPath 
+        public string OriginalSystemFilesPath
         {
             get
             {
-                return Path.Combine(OriginalAssemblyPath, luaFolder);
+                return Path.Combine(GetOriginalAssemblyPath(), luaFolder);
             }
         }
 
         /// <summary>
         /// Путь к файлам с скриптами командной строки для проверки проекта по
-        /// месту подключения надстройки
+        /// месту подключения надстройки.
         /// </summary>
         public string OriginalCMDFilesPath
         {
             get
             {
-                return Path.Combine(OriginalAssemblyPath, cmdScriptsFolder);
+                return Path.Combine(GetOriginalAssemblyPath(), cmdScriptsFolder);
             }
+        }
+
+        /// <summary>
+        /// Возвращает путь к каталогу надстройки без обращения к EPLAN.
+        /// </summary>
+        private string GetOriginalAssemblyPath()
+        {
+            return originalAssemblyPath;
         }
 
         private ProjectManager() { }

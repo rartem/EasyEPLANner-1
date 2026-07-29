@@ -512,7 +512,7 @@ namespace EplanDevice
         /// <param name="articleName">Изделие устройства</param>
         /// <param name="iolConfProperties">Свойства IOL-Conf</param>
         /// <param name="dLocation">Местоположение устройства</param>
-        private IODevice AddDevice(string devName, string description,
+        public IODevice AddDevice(string devName, string description,
             string subType, string paramStr, string rtParamStr, string propStr,
             int dLocation, out string errStr, string articleName,
             string iolConfProperties)

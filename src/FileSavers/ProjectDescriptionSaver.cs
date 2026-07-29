@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using EplanDevice;
 using IO;
@@ -137,6 +137,13 @@ namespace EasyEPlanner
         private static void SaveIOFile(ParametersForSave par)
         {
             string pathToFile = par.path + @"\" + mainIOFileName;
+
+            if (!string.IsNullOrEmpty(par.PreservedIOFileContent))
+            {
+                File.WriteAllText(pathToFile, par.PreservedIOFileContent,
+                    EncodingDetector.MainFilesEncoding);
+                return;
+            }
 
             string versionForPlc = string
                 .Format(VersionPattern, mainIOFileVersion);
@@ -491,6 +498,12 @@ namespace EasyEPlanner
             public string PAC_Name;
             public string path;
             public bool silentMode;
+
+            /// <summary>
+            /// Оригинальное содержимое main.io.lua.
+            /// Если задано, файл сохраняется без перегенерации.
+            /// </summary>
+            public string PreservedIOFileContent;
 
             public ParametersForSave(string PAC_Name, string path,
                 bool silentMode)

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Forms;
 
 namespace Editor
@@ -8,6 +8,10 @@ namespace Editor
     /// </summary>
     public class Editor : IEditor, System.IDisposable
     {
+        /// <summary>
+        /// Работа без EPLAN (standalone-редактор).
+        /// </summary>
+        public static bool StandaloneMode = false;
         public void Dispose()
         {
             Dispose(true);

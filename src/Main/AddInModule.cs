@@ -155,6 +155,8 @@ namespace EasyEPlanner
         public void OnBeforeInit(string strOriginalAssemblyPath)
         {
             OriginalAssemblyPath = strOriginalAssemblyPath;
+            ProjectManager.GetInstance().OriginalAssemblyPath =
+                Path.GetDirectoryName(strOriginalAssemblyPath);
         }
 
         /// <summary>

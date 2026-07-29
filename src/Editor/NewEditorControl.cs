@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Configuration;
 using System.Collections.Generic;
 using System.Drawing;
@@ -442,7 +442,10 @@ namespace Editor
             drawDev_toolStripButton.Checked = false;
 
             bool isClosingProject = true;
-            ProjectManager.GetInstance().RemoveHighLighting(isClosingProject);
+            if (!Editor.StandaloneMode)
+            {
+                ProjectManager.GetInstance().RemoveHighLighting(isClosingProject);
+            }
 
             System.Threading.Thread.Sleep(1);
 
@@ -585,6 +588,9 @@ namespace Editor
         /// </summary>
         private void HighlightItems()
         {
+            if (Editor.StandaloneMode)
+                return;
+
             ProjectManager.GetInstance().RemoveHighLighting();
 
             if (drawDev_toolStripButton.Checked is false)
@@ -1148,6 +1154,9 @@ namespace Editor
         /// </summary>
         private void DrawDev_toolStripButton_Click(object sender, EventArgs e)
         {
+            if (Editor.StandaloneMode)
+                return;
+
             ProjectManager.GetInstance().RemoveHighLighting();
 
             if (drawDev_toolStripButton.Checked)
@@ -1191,22 +1200,25 @@ namespace Editor
                     column.IsEditable = Editable;
                 }
 
-                EProjectManager.GetInstance().StopEditModes();
-
-                DFrm.CheckShown();
-                if (DFrm.GetInstance().IsVisible())
+                if (!Editor.StandaloneMode)
                 {
-                    ITreeViewItem item = null;
-                    DFrm.OnSetNewValue onSetNewValue = null;
-                    DFrm.GetInstance().ShowDisplayObjects(item, onSetNewValue);
-                }
+                    EProjectManager.GetInstance().StopEditModes();
 
-                ModeFrm.CheckShown();
-                if (ModeFrm.GetInstance().IsVisible())
-                {
-                    ModeFrm.GetInstance().ShowModes(
-                       TechObject.TechObjectManager.GetInstance(),
-                       false, false, null, null, null, true);
+                    DFrm.CheckShown();
+                    if (DFrm.GetInstance().IsVisible())
+                    {
+                        ITreeViewItem item = null;
+                        DFrm.OnSetNewValue onSetNewValue = null;
+                        DFrm.GetInstance().ShowDisplayObjects(item, onSetNewValue);
+                    }
+
+                    ModeFrm.CheckShown();
+                    if (ModeFrm.GetInstance().IsVisible())
+                    {
+                        ModeFrm.GetInstance().ShowModes(
+                           TechObject.TechObjectManager.GetInstance(),
+                           false, false, null, null, null, true);
+                    }
                 }
             }
             else
@@ -1222,45 +1234,48 @@ namespace Editor
                 }
 
                 //Редактирование устройств (запуск).
-                EProjectManager.GetInstance().StartEditModesWithDelay();
-
-                DFrm.CheckShown();
-                if (DFrm.GetInstance().IsVisible())
+                if (!Editor.StandaloneMode)
                 {
-                    ITreeViewItem item = GetActiveItem();
-                    if (item != null)
-                    {
-                        DFrm.GetInstance().ShowDisplayObjects(item, SetNewVal);
-                    }
-                    else
-                    {
-                        DFrm.GetInstance().ShowNoDevices();
-                    }
-                }
+                    EProjectManager.GetInstance().StartEditModesWithDelay();
 
-                ModeFrm.CheckShown();
-                if (ModeFrm.GetInstance().IsVisible())
-                {
-                    ITreeViewItem item = GetActiveItem();
-
-                    ITreeViewItem parentItem = null;
-                    if (item != null)
+                    DFrm.CheckShown();
+                    if (DFrm.GetInstance().IsVisible())
                     {
-                        parentItem = GetParentBranch(item);
+                        ITreeViewItem item = GetActiveItem();
+                        if (item != null)
+                        {
+                            DFrm.GetInstance().ShowDisplayObjects(item, SetNewVal);
+                        }
+                        else
+                        {
+                            DFrm.GetInstance().ShowNoDevices();
+                        }
                     }
 
-                    if (item != null && parentItem != null)
+                    ModeFrm.CheckShown();
+                    if (ModeFrm.GetInstance().IsVisible())
                     {
-                        ModeFrm.GetInstance().ShowModes(
-                            TechObject.TechObjectManager.GetInstance(),
-                            true, item.IsLocalRestrictionUse, parentItem,
-                            item, SetNewVal, true);
-                        ModeFrm.GetInstance().SelectDevices(item,
-                            SetNewVal);
-                    }
-                    else
-                    {
-                        ModeFrm.GetInstance().ShowNoModes();
+                        ITreeViewItem item = GetActiveItem();
+
+                        ITreeViewItem parentItem = null;
+                        if (item != null)
+                        {
+                            parentItem = GetParentBranch(item);
+                        }
+
+                        if (item != null && parentItem != null)
+                        {
+                            ModeFrm.GetInstance().ShowModes(
+                                TechObject.TechObjectManager.GetInstance(),
+                                true, item.IsLocalRestrictionUse, parentItem,
+                                item, SetNewVal, true);
+                            ModeFrm.GetInstance().SelectDevices(item,
+                                SetNewVal);
+                        }
+                        else
+                        {
+                            ModeFrm.GetInstance().ShowNoModes();
+                        }
                     }
                 }
             }
@@ -1300,12 +1315,15 @@ namespace Editor
         /// </summary>
         private void refresh_toolStripButton_Click(object sender, EventArgs e)
         {
-            bool saveDescrSilentMode = false;
-            EProjectManager.GetInstance().SyncAndSave(saveDescrSilentMode);
+            if (!Editor.StandaloneMode)
+            {
+                bool saveDescrSilentMode = false;
+                EProjectManager.GetInstance().SyncAndSave(saveDescrSilentMode);
 
-            DFrm.GetInstance().RefreshTree();
-            IOViewControl.Instance?.RebuildTree();
-            EasyEPlanner.Devices.View.DevicesViewControl.Instance?.RebuildTree();
+                DFrm.GetInstance().RefreshTree();
+                IOViewControl.Instance?.RebuildTree();
+                EasyEPlanner.Devices.View.DevicesViewControl.Instance?.RebuildTree();
+            }
 
             editorTView.RefreshObjects(treeViewItemsList);
         }
@@ -1632,32 +1650,35 @@ namespace Editor
 
             var item = GetActiveItem();
 
-            // Активировать режим редактирования на фСА для подсветки при выборе элемента: 
-            // Раньше активировался только при изменении страницы в EPLAN
-            if (drawDev_toolStripButton.Checked && 
-                item?.IsUseDevList is true &&
-                Editable)
-                EProjectManager.GetInstance().StartEditModes();
-
-            DFrm.CheckShown();
-            if (edit_toolStripButton.Checked && DFrm.GetInstance().IsVisible() == true)
+            if (!Editor.StandaloneMode)
             {
-                //Обновление списка устройств при его наличии.
-                if (item is null || item.IsUseDevList == false)
-                    DFrm.GetInstance().ShowNoDevices();
-                else
-                    DFrm.GetInstance().ShowDisplayObjects(item, SetNewVal, (e.Item is IAction) == false);
-            }
+                // Активировать режим редактирования на фСА для подсветки при выборе элемента: 
+                // Раньше активировался только при изменении страницы в EPLAN
+                if (drawDev_toolStripButton.Checked &&
+                    item?.IsUseDevList is true &&
+                    Editable)
+                    EProjectManager.GetInstance().StartEditModes();
 
-            ModeFrm.CheckShown();
-            if (edit_toolStripButton.Checked && ModeFrm.GetInstance().IsVisible() == true && item != null)
-            {
-                ITreeViewItem parentItem = GetParentBranch(item);
-                ModeFrm.GetInstance().ShowModes(
-                    TechObject.TechObjectManager.GetInstance(), true,
-                    item.IsLocalRestrictionUse, parentItem,
-                    item, SetNewVal, true);
-                ModeFrm.GetInstance().SelectDevices(item, SetNewVal);
+                DFrm.CheckShown();
+                if (edit_toolStripButton.Checked && DFrm.GetInstance().IsVisible() == true)
+                {
+                    //Обновление списка устройств при его наличии.
+                    if (item is null || item.IsUseDevList == false)
+                        DFrm.GetInstance().ShowNoDevices();
+                    else
+                        DFrm.GetInstance().ShowDisplayObjects(item, SetNewVal, (e.Item is IAction) == false);
+                }
+
+                ModeFrm.CheckShown();
+                if (edit_toolStripButton.Checked && ModeFrm.GetInstance().IsVisible() == true && item != null)
+                {
+                    ITreeViewItem parentItem = GetParentBranch(item);
+                    ModeFrm.GetInstance().ShowModes(
+                        TechObject.TechObjectManager.GetInstance(), true,
+                        item.IsLocalRestrictionUse, parentItem,
+                        item, SetNewVal, true);
+                    ModeFrm.GetInstance().SelectDevices(item, SetNewVal);
+                }
             }
 
             editorTView.EndUpdate();
