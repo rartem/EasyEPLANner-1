@@ -8,11 +8,14 @@ namespace EasyEPlanner.StandaloneEditor
     {
         private readonly MenuStrip menuStrip;
         private readonly ToolStripMenuItem openProjectMenuItem;
+        private readonly ToolStripMenuItem recentProjectsMenuItem;
         private readonly ToolStripMenuItem saveAllMenuItem;
         private readonly ToolStripMenuItem exitMenuItem;
         private readonly Panel editorPanel;
         private readonly StatusStrip statusStrip;
         private readonly ToolStripStatusLabel statusLabel;
+
+        private readonly RecentProjectsManager recentProjectsManager;
 
         private StandaloneProjectLoader currentLoader;
 
@@ -21,6 +24,8 @@ namespace EasyEPlanner.StandaloneEditor
             Text = "EasyEPlanner — редактор технологических объектов";
             Width = 1200;
             Height = 800;
+
+            recentProjectsManager = new RecentProjectsManager();
 
             if (!string.IsNullOrEmpty(projectPath))
             {
@@ -31,12 +36,14 @@ namespace EasyEPlanner.StandaloneEditor
             var fileMenu = new ToolStripMenuItem("Файл");
             openProjectMenuItem = new ToolStripMenuItem("Открыть проект...",
                 null, OnOpenProject);
+            recentProjectsMenuItem = new ToolStripMenuItem("Недавние проекты");
             saveAllMenuItem = new ToolStripMenuItem("Сохранить всё",
                 null, OnSaveAll);
             exitMenuItem = new ToolStripMenuItem("Выход", null,
                 (s, e) => Close());
 
             fileMenu.DropDownItems.Add(openProjectMenuItem);
+            fileMenu.DropDownItems.Add(recentProjectsMenuItem);
             fileMenu.DropDownItems.Add(saveAllMenuItem);
             fileMenu.DropDownItems.Add(new ToolStripSeparator());
             fileMenu.DropDownItems.Add(exitMenuItem);
@@ -57,6 +64,8 @@ namespace EasyEPlanner.StandaloneEditor
             Controls.Add(menuStrip);
 
             MainMenuStrip = menuStrip;
+
+            Load += (sender, e) => UpdateRecentProjectsMenu();
         }
 
         private void OnOpenProject(object sender, EventArgs e)
@@ -85,11 +94,53 @@ namespace EasyEPlanner.StandaloneEditor
                 return;
             }
 
+            recentProjectsManager.Add(projectDirectory);
+            UpdateRecentProjectsMenu();
+
             var editorControl = Editor.Editor.GetInstance().EditorForm;
             editorControl.Dock = DockStyle.Fill;
             editorPanel.Controls.Add(editorControl);
 
             statusLabel.Text = $"Проект: {currentLoader.ProjectName}";
+        }
+
+        private void UpdateRecentProjectsMenu()
+        {
+            recentProjectsMenuItem.DropDownItems.Clear();
+
+            var projects = recentProjectsManager.Projects;
+            if (projects.Count == 0)
+            {
+                var emptyItem = new ToolStripMenuItem("(пусто)")
+                {
+                    Enabled = false,
+                };
+                recentProjectsMenuItem.DropDownItems.Add(emptyItem);
+                return;
+            }
+
+            foreach (string path in projects)
+            {
+                string displayPath = path;
+                if (displayPath.Length > 80)
+                {
+                    displayPath = "..." + displayPath.Substring(displayPath.Length - 77);
+                }
+
+                var item = new ToolStripMenuItem(displayPath, null,
+                    (sender, e) => OpenProject(path));
+                item.ToolTipText = path;
+                recentProjectsMenuItem.DropDownItems.Add(item);
+            }
+
+            recentProjectsMenuItem.DropDownItems.Add(new ToolStripSeparator());
+            var clearItem = new ToolStripMenuItem("Очистить историю", null,
+                (sender, e) =>
+                {
+                    recentProjectsManager.Clear();
+                    UpdateRecentProjectsMenu();
+                });
+            recentProjectsMenuItem.DropDownItems.Add(clearItem);
         }
 
         private void OnSaveAll(object sender, EventArgs e)

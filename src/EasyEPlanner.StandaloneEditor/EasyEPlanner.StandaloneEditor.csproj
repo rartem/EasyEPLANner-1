@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="MainForm.cs" />
+    <Compile Include="RecentProjectsManager.cs" />
     <Compile Include="StandaloneLog.cs" />
     <Compile Include="StandaloneProjectLoader.cs" />
     <Compile Include="StandaloneIoLoader.cs" />
