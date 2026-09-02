@@ -1095,9 +1095,6 @@ namespace InterprojectExchange
         {
             advProjItems.Clear();
             IProjectModel model = interprojectExchange.GetModel(projName);
-            
-            if (model.Selected)
-                return;
 
             List<DeviceInfo> devices = model.Devices;
             foreach (var devInfo in devices)
