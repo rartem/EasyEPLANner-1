@@ -53,11 +53,61 @@ namespace InterprojectExchange
             interprojectExchange.ChangeEditMode(modeComboBox.SelectedIndex);
             modeComboBox.SelectedValueChanged += 
                 modeComboBox_SelectedValueChanged;
+
+            InitializePairEditingHelp();
+        }
+
+        /// <summary>
+        /// Добавить подсказки и явную команду удаления пары сигналов.
+        /// </summary>
+        private void InitializePairEditingHelp()
+        {
+            pairEditingToolTip = new ToolTip();
+            pairEditingToolTip.SetToolTip(currentProjSignalsList,
+                "Выберите сигнал, затем сигнал второго проекта для " +
+                "добавления или изменения пары.");
+            pairEditingToolTip.SetToolTip(advancedProjSignalsList,
+                "Выберите сигнал, затем сигнал главного проекта для " +
+                "добавления или изменения пары.");
+            pairEditingToolTip.SetToolTip(bindedSignalsList,
+                "Выберите пару для изменения. Delete или контекстное меню " +
+                "удаляет пару.");
+
+            pairEditingContextMenu = new ContextMenuStrip();
+            var deletePairItem = new ToolStripMenuItem("Удалить пару сигналов");
+            deletePairItem.Click += (sender, args) =>
+            {
+                var selectedItem = bindedSignalsList.SelectedItems
+                    .OfType<ListViewItem>().FirstOrDefault();
+                if (selectedItem != null)
+                {
+                    DeleteItemFromBindedSignals(selectedItem);
+                }
+            };
+            pairEditingContextMenu.Opening += (sender, args) =>
+            {
+                deletePairItem.Enabled =
+                    bindedSignalsList.SelectedItems.Count > 0;
+            };
+            pairEditingContextMenu.Items.Add(deletePairItem);
+            bindedSignalsList.ContextMenuStrip = pairEditingContextMenu;
+
+            var editingHint = new Label
+            {
+                AutoEllipsis = true,
+                Dock = DockStyle.Fill,
+                Text = "Выберите два сигнала — добавить пару; " +
+                    "Delete — удалить",
+                TextAlign = ContentAlignment.MiddleCenter,
+            };
+            mainTLP.Controls.Add(editingHint, 1, 2);
         }
 
         private FilterConfiguration filterConfiguration;
         private IInterprojectExchange interprojectExchange;
         private readonly string preferredAdvancedProjectName;
+        private ToolTip pairEditingToolTip;
+        private ContextMenuStrip pairEditingContextMenu;
 
         private List<ListViewItem> currProjItems;
         private List<ListViewItem> advProjItems;
@@ -79,6 +129,8 @@ namespace InterprojectExchange
             FormClosedEventArgs e)
         {
             filterConfiguration.Dispose();
+            pairEditingToolTip?.Dispose();
+            pairEditingContextMenu?.Dispose();
             Dispose();
         }
 
@@ -1167,8 +1219,16 @@ namespace InterprojectExchange
         /// <param name="e"></param>
         private void saveButton_Click(object sender, EventArgs e)
         {
-            interprojectExchange.Save();
-            Close();
+            try
+            {
+                interprojectExchange.Save();
+                Close();
+            }
+            catch (Exception exception)
+            {
+                ShowErrorMessage("Не удалось сохранить shared.lua:\n" +
+                    exception.Message);
+            }
         }
 
         /// <summary>

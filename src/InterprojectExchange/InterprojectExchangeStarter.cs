@@ -69,6 +69,26 @@ namespace InterprojectExchange
             string advancedProjectFolder,
             IEnumerable<string> repositoryRoots, out string errors)
         {
+            if (!LoadStandaloneProjects(mainProjectFolder,
+                advancedProjectFolder, repositoryRoots, out errors))
+            {
+                return false;
+            }
+
+            form = new InterprojectExchangeForm(
+                standaloneAdvancedProjectName);
+            ShowForm(true);
+            return true;
+        }
+
+        /// <summary>
+        /// Загрузить устройства и существующие связи двух проектов без
+        /// открытия формы. Используется standalone-редактором и тестами.
+        /// </summary>
+        public bool LoadStandaloneProjects(string mainProjectFolder,
+            string advancedProjectFolder,
+            IEnumerable<string> repositoryRoots, out string errors)
+        {
             errors = string.Empty;
             if (!MainIoProjectNameReader.TryReadFromFolder(mainProjectFolder,
                 out string mainProjectName, out errors))
@@ -82,6 +102,8 @@ namespace InterprojectExchange
             {
                 return false;
             }
+
+            standaloneAdvancedProjectName = advancedProjectName;
 
             if (string.Equals(mainProjectName, advancedProjectName,
                 StringComparison.Ordinal))
@@ -98,8 +120,11 @@ namespace InterprojectExchange
             interprojectExchange.Owner = this;
             standaloneSystemFilesPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory, "Lua");
+            string localAppDataPath = Environment.GetFolderPath(
+                Environment.SpecialFolder.LocalApplicationData);
             FilterConfiguration.SetStandaloneConfigurationDirectory(
-                AppDomain.CurrentDomain.BaseDirectory);
+                Path.Combine(localAppDataPath,
+                    "EasyEPlanner.StandaloneEditor"));
 
             InterprojectProjectCatalog.Invalidate();
             InterprojectProjectCatalog.BuildIndexFromRoots(repositoryRoots);
@@ -109,20 +134,17 @@ namespace InterprojectExchange
                 advancedProjectName);
 
             _projectsNotOpenedOnLoad.Clear();
-            form = new InterprojectExchangeForm(advancedProjectName);
 
             if (!LoadStandaloneMainProject(mainProjectFolder,
                 mainProjectName))
             {
                 errors = "Не удалось загрузить главный проект.";
-                form.Dispose();
                 return false;
             }
 
             if (!LoadProjectData(advancedProjectFolder,
                 advancedProjectName, out errors))
             {
-                form.Dispose();
                 return false;
             }
 
@@ -130,11 +152,9 @@ namespace InterprojectExchange
             if (!mainModelLoaded)
             {
                 errors = "Не удалось создать модель главного проекта.";
-                form.Dispose();
                 return false;
             }
 
-            ShowForm(true);
             return true;
         }
 
@@ -478,7 +498,7 @@ namespace InterprojectExchange
 
         public void WarningProjectNameInIOFile(string folderName)
         {
-            form.ShowWarningMessage(
+            form?.ShowWarningMessage(
                 $"PAC_name в main.io.lua не совпадает с именем каталога \"{folderName}\". " +
                 "Используется PAC_name из файла.",
                 MessageBoxButtons.OK);
@@ -657,7 +677,7 @@ namespace InterprojectExchange
             }
             interprojectExchangeSaver = new InterprojectExchangeSaver(
                 interprojectExchange, signalsFile);
-            _ = interprojectExchangeSaver.SaveAsync();
+            interprojectExchangeSaver.SaveAsync().GetAwaiter().GetResult();
         }
 
         const string devicesAndPLCFile = "main.io.lua";
@@ -671,6 +691,7 @@ namespace InterprojectExchange
         private readonly List<string> _projectsNotOpenedOnLoad = new List<string>();
         private readonly bool isStandaloneMode;
         private string standaloneSystemFilesPath;
+        private string standaloneAdvancedProjectName;
 
         Lua lua;
 

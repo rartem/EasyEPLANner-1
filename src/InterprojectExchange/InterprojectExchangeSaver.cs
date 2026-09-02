@@ -32,8 +32,8 @@ namespace InterprojectExchange
         /// </summary>
         public async Task SaveAsync()
         {
-            await Task.Run(() => WriteMainProject());
-            await WriteAdvancedProjectsAsync();
+            await Task.Run(() => WriteMainProject()).ConfigureAwait(false);
+            await WriteAdvancedProjectsAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -70,7 +70,8 @@ namespace InterprojectExchange
             foreach (var model in interprojectExchange.Models
                 .Where(m => m.Loaded && m != interprojectExchange.MainModel))
             {
-                await Task.Run(() => WriteAlternativeModel(model));
+                await Task.Run(() => WriteAlternativeModel(model))
+                    .ConfigureAwait(false);
             }
         }
 

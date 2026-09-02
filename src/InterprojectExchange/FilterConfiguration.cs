@@ -40,6 +40,13 @@ namespace InterprojectExchange
             bool hardRefilter = true;
             SignalsFilterChanged.Invoke(hardRefilter);
 
+            string configurationDirectory = Path.GetDirectoryName(
+                pathToConfig);
+            if (!string.IsNullOrEmpty(configurationDirectory))
+            {
+                Directory.CreateDirectory(configurationDirectory);
+            }
+
             var iniFile = new IniFile(pathToConfig);
             foreach(var section in FilterParameters.Keys)
             {
@@ -63,8 +70,12 @@ namespace InterprojectExchange
         {
             if (!File.Exists(pathToConfig))
             {
-                MessageBox.Show("Не найден файл конфигурации для фильтра",
-                    "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!isStandaloneConfiguration)
+                {
+                    MessageBox.Show("Не найден файл конфигурации для фильтра",
+                        "Ошибка", MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
                 return;
             }
 
@@ -240,6 +251,8 @@ namespace InterprojectExchange
             string configurationDirectory)
         {
             standaloneConfigurationDirectory = configurationDirectory;
+            isStandaloneConfiguration = !string.IsNullOrEmpty(
+                configurationDirectory);
         }
 
         /// <summary>
@@ -409,6 +422,7 @@ namespace InterprojectExchange
 
         private static FilterConfiguration filterConfiguration;
         private static string standaloneConfigurationDirectory;
+        private static bool isStandaloneConfiguration;
         private string pathToConfig;
         private FilterForm filterForm;
 
