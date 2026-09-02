@@ -248,7 +248,11 @@ namespace EasyEPlanner.StandaloneEditor
         {
             using (var form = new ProjectRepositoriesForm(repositoryManager))
             {
-                form.ShowDialog(this);
+                if (form.ShowDialog(this) == DialogResult.OK &&
+                    form.SelectedProject != null)
+                {
+                    OpenProject(form.SelectedProject.ProjectPath);
+                }
             }
         }
 

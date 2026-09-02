@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -13,6 +14,8 @@ namespace EasyEPlanner.StandaloneEditor
         private readonly ListBox repositoriesList;
         private readonly ListView projectsList;
         private readonly Label statusLabel;
+        private int sortColumn = -1;
+        private SortOrder sortOrder = SortOrder.None;
 
         public ProjectRepositoriesForm(
             ProjectRepositoryManager repositoryManager)
@@ -38,14 +41,18 @@ namespace EasyEPlanner.StandaloneEditor
                 View = View.Details,
                 FullRowSelect = true,
                 GridLines = true,
+                MultiSelect = false,
             };
             projectsList.Columns.Add("PAC_name", 160);
             projectsList.Columns.Add("Каталог проекта", 500);
+            projectsList.DoubleClick += OnOpenSelectedProject;
+            projectsList.ColumnClick += OnProjectsListColumnClick;
 
             var split = new SplitContainer
             {
                 Dock = DockStyle.Fill,
-                SplitterDistance = 300,
+                SplitterDistance = 180,
+                FixedPanel = FixedPanel.Panel1,
             };
             split.Panel1.Controls.Add(repositoriesList);
             split.Panel2.Controls.Add(projectsList);
@@ -71,11 +78,18 @@ namespace EasyEPlanner.StandaloneEditor
             };
             refreshButton.Click += (sender, e) => RefreshData();
 
+            var openButton = new Button
+            {
+                Text = "Открыть",
+                AutoSize = true,
+            };
+            openButton.Click += OnOpenSelectedProject;
+
             var closeButton = new Button
             {
                 Text = "Закрыть",
                 AutoSize = true,
-                DialogResult = DialogResult.OK,
+                DialogResult = DialogResult.Cancel,
             };
 
             var buttons = new FlowLayoutPanel
@@ -88,6 +102,7 @@ namespace EasyEPlanner.StandaloneEditor
             buttons.Controls.Add(addButton);
             buttons.Controls.Add(removeButton);
             buttons.Controls.Add(refreshButton);
+            buttons.Controls.Add(openButton);
             buttons.Controls.Add(closeButton);
 
             statusLabel = new Label
@@ -119,11 +134,16 @@ namespace EasyEPlanner.StandaloneEditor
             Controls.Add(split);
             Controls.Add(statusLabel);
             Controls.Add(buttons);
-            AcceptButton = closeButton;
+            AcceptButton = openButton;
             CancelButton = closeButton;
 
             Shown += (sender, e) => RefreshData();
         }
+
+        /// <summary>
+        /// Проект, выбранный для открытия.
+        /// </summary>
+        public RepositoryProject SelectedProject { get; private set; }
 
         private void OnAddRepository(object sender, EventArgs e)
         {
@@ -181,7 +201,15 @@ namespace EasyEPlanner.StandaloneEditor
             {
                 var item = new ListViewItem(project.ProjectName);
                 item.SubItems.Add(project.ProjectPath);
+                item.Tag = project;
                 projectsList.Items.Add(item);
+            }
+
+            if (sortColumn >= 0)
+            {
+                projectsList.ListViewItemSorter =
+                    new ListViewItemComparer(sortColumn, sortOrder);
+                projectsList.Sort();
             }
 
             statusLabel.Text = $"Проектов: {projects.Count}. " +
@@ -193,6 +221,62 @@ namespace EasyEPlanner.StandaloneEditor
             statusLabel.Cursor = errors.Count == 0
                 ? Cursors.Default
                 : Cursors.Hand;
+        }
+
+        private void OnOpenSelectedProject(object sender, EventArgs e)
+        {
+            if (projectsList.SelectedItems.Count == 0)
+            {
+                ShowError("Выберите проект для открытия.");
+                return;
+            }
+
+            SelectedProject = projectsList.SelectedItems[0].Tag as RepositoryProject;
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+
+        private void OnProjectsListColumnClick(object sender,
+            ColumnClickEventArgs e)
+        {
+            if (e.Column == sortColumn)
+            {
+                sortOrder = sortOrder == SortOrder.Ascending
+                    ? SortOrder.Descending
+                    : SortOrder.Ascending;
+            }
+            else
+            {
+                sortColumn = e.Column;
+                sortOrder = SortOrder.Ascending;
+            }
+
+            projectsList.ListViewItemSorter =
+                new ListViewItemComparer(sortColumn, sortOrder);
+            projectsList.Sort();
+        }
+
+        private sealed class ListViewItemComparer : IComparer
+        {
+            private readonly int column;
+            private readonly SortOrder order;
+
+            public ListViewItemComparer(int column, SortOrder order)
+            {
+                this.column = column;
+                this.order = order;
+            }
+
+            public int Compare(object x, object y)
+            {
+                var itemX = (ListViewItem)x;
+                var itemY = (ListViewItem)y;
+                string textX = itemX.SubItems[column].Text;
+                string textY = itemY.SubItems[column].Text;
+                int result = string.Compare(textX, textY,
+                    StringComparison.OrdinalIgnoreCase);
+                return order == SortOrder.Descending ? -result : result;
+            }
         }
 
         private void OnShowDiscoveryErrors(object sender, EventArgs e)

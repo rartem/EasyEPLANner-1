@@ -1,6 +1,7 @@
 using InterprojectExchange;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -14,8 +15,8 @@ namespace EasyEPlanner.StandaloneEditor
     {
         private readonly ProjectRepositoryManager repositoryManager;
         private readonly string currentProjectPath;
-        private readonly ComboBox mainProjectComboBox;
-        private readonly ComboBox advancedProjectComboBox;
+        private readonly ProjectSelector mainProjectSelector;
+        private readonly ProjectSelector advancedProjectSelector;
         private readonly Label statusLabel;
         private List<RepositoryProject> projects;
 
@@ -29,15 +30,21 @@ namespace EasyEPlanner.StandaloneEditor
 
             Text = "Выбор проектов межпроектного обмена";
             Width = 760;
-            Height = 250;
+            Height = 500;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
             MinimizeBox = false;
 
-            mainProjectComboBox = CreateProjectsComboBox();
-            advancedProjectComboBox = CreateProjectsComboBox();
-            mainProjectComboBox.SelectedIndexChanged +=
+            mainProjectSelector = new ProjectSelector
+            {
+                Dock = DockStyle.Fill,
+            };
+            advancedProjectSelector = new ProjectSelector
+            {
+                Dock = DockStyle.Fill,
+            };
+            mainProjectSelector.SelectedProjectChanged +=
                 OnMainProjectChanged;
 
             var repositoriesButton = new Button
@@ -70,8 +77,8 @@ namespace EasyEPlanner.StandaloneEditor
             };
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 145));
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 140));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 140));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
 
@@ -79,16 +86,16 @@ namespace EasyEPlanner.StandaloneEditor
             {
                 Text = "Главный проект:",
                 AutoSize = true,
-                Anchor = AnchorStyles.Left,
+                Anchor = AnchorStyles.Left | AnchorStyles.Top,
             }, 0, 0);
-            layout.Controls.Add(mainProjectComboBox, 1, 0);
+            layout.Controls.Add(mainProjectSelector, 1, 0);
             layout.Controls.Add(new Label
             {
                 Text = "Второй проект:",
                 AutoSize = true,
-                Anchor = AnchorStyles.Left,
+                Anchor = AnchorStyles.Left | AnchorStyles.Top,
             }, 0, 1);
-            layout.Controls.Add(advancedProjectComboBox, 1, 1);
+            layout.Controls.Add(advancedProjectSelector, 1, 1);
 
             statusLabel = new Label
             {
@@ -117,19 +124,10 @@ namespace EasyEPlanner.StandaloneEditor
         }
 
         public RepositoryProject SelectedMainProject =>
-            mainProjectComboBox.SelectedItem as RepositoryProject;
+            mainProjectSelector.SelectedProject;
 
         public RepositoryProject SelectedAdvancedProject =>
-            advancedProjectComboBox.SelectedItem as RepositoryProject;
-
-        private static ComboBox CreateProjectsComboBox()
-        {
-            return new ComboBox
-            {
-                Dock = DockStyle.Fill,
-                DropDownStyle = ComboBoxStyle.DropDownList,
-            };
-        }
+            advancedProjectSelector.SelectedProject;
 
         private void OnManageRepositories(object sender, EventArgs e)
         {
@@ -150,14 +148,12 @@ namespace EasyEPlanner.StandaloneEditor
                 .ToList();
             AddCurrentProjectIfNeeded(projects);
 
-            mainProjectComboBox.DataSource = null;
-            advancedProjectComboBox.DataSource = null;
-            mainProjectComboBox.DataSource = projects.ToList();
-            advancedProjectComboBox.DataSource = projects.ToList();
+            mainProjectSelector.SetProjects(projects);
+            advancedProjectSelector.SetProjects(projects);
 
-            SelectProject(mainProjectComboBox,
+            mainProjectSelector.SelectProject(
                 previousMainPath ?? currentProjectPath);
-            SelectProject(advancedProjectComboBox, previousAdvancedPath);
+            advancedProjectSelector.SelectProject(previousAdvancedPath);
             SelectAnotherAdvancedProject();
 
             statusLabel.Text = projects.Count == 0
@@ -204,7 +200,7 @@ namespace EasyEPlanner.StandaloneEditor
             RepositoryProject anotherProject = projects?.FirstOrDefault(
                 project => !string.Equals(project.ProjectName,
                     mainProject.ProjectName, StringComparison.Ordinal));
-            advancedProjectComboBox.SelectedItem = anotherProject;
+            advancedProjectSelector.SelectProject(anotherProject);
         }
 
         private void OnOpenEditor(object sender, EventArgs e)
@@ -228,26 +224,6 @@ namespace EasyEPlanner.StandaloneEditor
             Close();
         }
 
-        private static void SelectProject(ComboBox comboBox,
-            string projectPath)
-        {
-            if (string.IsNullOrEmpty(projectPath))
-            {
-                return;
-            }
-
-            for (int index = 0; index < comboBox.Items.Count; index++)
-            {
-                var project = comboBox.Items[index] as RepositoryProject;
-                if (project != null && PathsEqual(project.ProjectPath,
-                    projectPath))
-                {
-                    comboBox.SelectedIndex = index;
-                    return;
-                }
-            }
-        }
-
         private static bool PathsEqual(string first, string second)
         {
             return string.Equals(Path.GetFullPath(first)
@@ -260,6 +236,147 @@ namespace EasyEPlanner.StandaloneEditor
         {
             MessageBox.Show(this, message, "Выбор проектов",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        /// <summary>
+        /// Поле ввода со списком проектов и фильтрацией по мере ввода.
+        /// </summary>
+        private sealed class ProjectSelector : Panel
+        {
+            private readonly TextBox textBox;
+            private readonly ListBox listBox;
+            private List<RepositoryProject> allProjects =
+                new List<RepositoryProject>();
+            private bool updatingText;
+
+            public ProjectSelector()
+            {
+                textBox = new TextBox
+                {
+                    Dock = DockStyle.Top,
+                    Margin = new Padding(0),
+                };
+                textBox.TextChanged += OnTextChanged;
+                textBox.KeyDown += OnTextBoxKeyDown;
+
+                listBox = new ListBox
+                {
+                    Dock = DockStyle.Fill,
+                    Margin = new Padding(0),
+                };
+                listBox.SelectedIndexChanged += OnListBoxSelectedIndexChanged;
+
+                Controls.Add(listBox);
+                Controls.Add(textBox);
+            }
+
+            public RepositoryProject SelectedProject { get; private set; }
+
+            public event EventHandler SelectedProjectChanged;
+
+            public void SetProjects(IEnumerable<RepositoryProject> projects)
+            {
+                allProjects = projects.ToList();
+                ApplyFilter();
+            }
+
+            public void SelectProject(string projectPath)
+            {
+                if (string.IsNullOrEmpty(projectPath))
+                {
+                    return;
+                }
+
+                var project = allProjects.FirstOrDefault(item =>
+                    PathsEqual(item.ProjectPath, projectPath));
+                SelectProject(project);
+            }
+
+            public void SelectProject(RepositoryProject project)
+            {
+                SelectedProject = project;
+                SetText(project?.ToString() ?? string.Empty);
+                SelectListItem(project);
+            }
+
+            private void SelectListItem(RepositoryProject project)
+            {
+                if (project == null)
+                {
+                    listBox.SelectedItem = null;
+                    return;
+                }
+
+                for (int index = 0; index < listBox.Items.Count; index++)
+                {
+                    if (ReferenceEquals(listBox.Items[index], project))
+                    {
+                        listBox.SelectedIndex = index;
+                        return;
+                    }
+                }
+            }
+
+            private void SetText(string text)
+            {
+                updatingText = true;
+                textBox.Text = text;
+                updatingText = false;
+            }
+
+            private void OnTextChanged(object sender, EventArgs e)
+            {
+                if (updatingText)
+                {
+                    return;
+                }
+
+                SelectedProject = null;
+                ApplyFilter();
+            }
+
+            private void ApplyFilter()
+            {
+                string filter = textBox.Text;
+                var filtered = string.IsNullOrEmpty(filter)
+                    ? allProjects
+                    : allProjects.Where(project =>
+                        project.ToString().IndexOf(filter,
+                            StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+
+                listBox.Items.Clear();
+                foreach (var project in filtered)
+                {
+                    listBox.Items.Add(project);
+                }
+            }
+
+            private void OnListBoxSelectedIndexChanged(object sender,
+                EventArgs e)
+            {
+                if (listBox.SelectedItem is RepositoryProject project)
+                {
+                    SelectedProject = project;
+                    SetText(project.ToString());
+                    SelectedProjectChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+
+            private void OnTextBoxKeyDown(object sender, KeyEventArgs e)
+            {
+                if (e.KeyCode == Keys.Down && listBox.Items.Count > 0)
+                {
+                    listBox.SelectedIndex = 0;
+                    listBox.Focus();
+                }
+                else if (e.KeyCode == Keys.Enter &&
+                    listBox.SelectedItem is RepositoryProject project)
+                {
+                    SelectedProject = project;
+                    SetText(project.ToString());
+                    SelectedProjectChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
         }
     }
 }
