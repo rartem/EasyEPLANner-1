@@ -85,6 +85,13 @@
     <Compile Include="Program.cs" />
     <Compile Include="MainForm.cs" />
     <Compile Include="RecentProjectsManager.cs" />
+    <Compile Include="ProjectRepositoryManager.cs" />
+    <Compile Include="ProjectRepositoriesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InterprojectProjectSelectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="StandaloneDevicesForm.cs">
       <SubType>Form</SubType>
     </Compile>

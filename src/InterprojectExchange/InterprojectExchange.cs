@@ -21,7 +21,15 @@ namespace InterprojectExchange
         {
             interprojectExchangeStarter = null;
             interprojectExchangeModels.Clear();
+            standaloneMainProjectName = null;
             InterprojectProjectCatalog.Invalidate();
+        }
+
+        public void SetStandaloneMainProjectName(string projectName)
+        {
+            standaloneMainProjectName = string.IsNullOrWhiteSpace(projectName)
+                ? null
+                : projectName.Trim();
         }
 
         public void AddModel(IProjectModel model)
@@ -380,7 +388,19 @@ namespace InterprojectExchange
             }
         }
 
-        public string MainProjectName => eProjectManager.GetModifyingCurrentProjectName();
+        public string MainProjectName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(standaloneMainProjectName))
+                {
+                    return standaloneMainProjectName;
+                }
+
+                return eProjectManager?.GetModifyingCurrentProjectName() ??
+                    string.Empty;
+            }
+        }
 
         public string DefaultPathWithProjects
         {
@@ -455,6 +475,7 @@ namespace InterprojectExchange
         }
 
         private static IEProjectManager eProjectManager = null;
+        private string standaloneMainProjectName;
         private EditMode editMode;
         private InterprojectExchangeStarter interprojectExchangeStarter;
         private static InterprojectExchange interprojectExchange;

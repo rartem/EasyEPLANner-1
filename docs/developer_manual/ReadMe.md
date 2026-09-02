@@ -12,6 +12,8 @@
 
 [Документация по EPLAN](https://www.eplan.help/ru-RU/Infoportal/Content/Plattform/2.9/EPLAN_Help.htm) или кнопка **F1** в **EPLAN**.
 
+[Спецификация и журнал доработки standalone-редактора](StandaloneEditorSpecification.md).
+
 ## Содержание ##
 1. [Технологический стек и проекты](#1-Технологический-стек-и-проекты)
     + [1.1 Aga.Controls](#11-AgaControls)

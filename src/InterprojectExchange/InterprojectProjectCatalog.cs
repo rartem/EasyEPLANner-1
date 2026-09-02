@@ -104,7 +104,18 @@ namespace InterprojectExchange
                             continue;
                         }
 
-                        ScanProjectsRoot(projectsRoot);
+                        try
+                        {
+                            ScanProjectsRoot(projectsRoot);
+                        }
+                        catch (IOException)
+                        {
+                            // Недоступный репозиторий не блокирует остальные.
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            // Недоступный репозиторий не блокирует остальные.
+                        }
                     }
                 }
 

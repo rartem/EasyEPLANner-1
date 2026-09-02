@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Windows.Forms;
+using InterprojectExchange;
 
 namespace EasyEPlanner.StandaloneEditor
 {
@@ -10,14 +11,17 @@ namespace EasyEPlanner.StandaloneEditor
         private readonly ToolStripMenuItem openProjectMenuItem;
         private readonly ToolStripMenuItem recentProjectsMenuItem;
         private readonly ToolStripMenuItem saveAllMenuItem;
+        private readonly ToolStripMenuItem projectLogMenuItem;
         private readonly ToolStripMenuItem exitMenuItem;
         private readonly Panel editorPanel;
         private readonly StatusStrip statusStrip;
         private readonly ToolStripStatusLabel statusLabel;
 
         private readonly RecentProjectsManager recentProjectsManager;
+        private readonly ProjectRepositoryManager repositoryManager;
 
         private StandaloneProjectLoader currentLoader;
+        private StandaloneLog currentProjectLog;
 
         public MainForm(string projectPath = null)
         {
@@ -26,6 +30,7 @@ namespace EasyEPlanner.StandaloneEditor
             Height = 800;
 
             recentProjectsManager = new RecentProjectsManager();
+            repositoryManager = new ProjectRepositoryManager();
 
             if (!string.IsNullOrEmpty(projectPath))
             {
@@ -39,15 +44,32 @@ namespace EasyEPlanner.StandaloneEditor
             recentProjectsMenuItem = new ToolStripMenuItem("Недавние проекты");
             saveAllMenuItem = new ToolStripMenuItem("Сохранить всё",
                 null, OnSaveAll);
+            projectLogMenuItem = new ToolStripMenuItem("Журнал проекта",
+                null, OnShowProjectLog)
+            {
+                Enabled = false,
+            };
             exitMenuItem = new ToolStripMenuItem("Выход", null,
                 (s, e) => Close());
 
             fileMenu.DropDownItems.Add(openProjectMenuItem);
             fileMenu.DropDownItems.Add(recentProjectsMenuItem);
             fileMenu.DropDownItems.Add(saveAllMenuItem);
+            fileMenu.DropDownItems.Add(projectLogMenuItem);
             fileMenu.DropDownItems.Add(new ToolStripSeparator());
             fileMenu.DropDownItems.Add(exitMenuItem);
             menuStrip.Items.Add(fileMenu);
+
+            var projectsMenu = new ToolStripMenuItem("Проекты");
+            var repositoriesMenuItem = new ToolStripMenuItem(
+                "Репозитории проектов...", null,
+                OnShowProjectRepositories);
+            var interprojectExchangeMenuItem = new ToolStripMenuItem(
+                "Межпроектный обмен...", null,
+                OnOpenInterprojectExchange);
+            projectsMenu.DropDownItems.Add(repositoriesMenuItem);
+            projectsMenu.DropDownItems.Add(interprojectExchangeMenuItem);
+            menuStrip.Items.Add(projectsMenu);
 
             editorPanel = new Panel
             {
@@ -66,6 +88,7 @@ namespace EasyEPlanner.StandaloneEditor
             MainMenuStrip = menuStrip;
 
             Load += (sender, e) => UpdateRecentProjectsMenu();
+            FormClosed += (sender, e) => currentProjectLog?.Dispose();
         }
 
         private void OnOpenProject(object sender, EventArgs e)
@@ -86,13 +109,22 @@ namespace EasyEPlanner.StandaloneEditor
         private void OpenProject(string projectDirectory)
         {
             editorPanel.Controls.Clear();
+            if (currentProjectLog != null)
+            {
+                currentProjectLog.Changed -= OnProjectLogChanged;
+                currentProjectLog.Dispose();
+            }
+
             currentLoader = new StandaloneProjectLoader();
 
             if (!currentLoader.Load(projectDirectory))
             {
+                SetCurrentProjectLog(currentLoader.ProjectLog);
                 currentLoader = null;
                 return;
             }
+
+            SetCurrentProjectLog(currentLoader.ProjectLog);
 
             recentProjectsManager.Add(projectDirectory);
             UpdateRecentProjectsMenu();
@@ -102,6 +134,42 @@ namespace EasyEPlanner.StandaloneEditor
             editorPanel.Controls.Add(editorControl);
 
             statusLabel.Text = $"Проект: {currentLoader.ProjectName}";
+        }
+
+        private void SetCurrentProjectLog(StandaloneLog projectLog)
+        {
+            currentProjectLog = projectLog;
+            if (currentProjectLog != null)
+            {
+                currentProjectLog.Changed += OnProjectLogChanged;
+            }
+
+            UpdateProjectLogMenu();
+        }
+
+        private void OnProjectLogChanged(object sender, EventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(UpdateProjectLogMenu));
+                return;
+            }
+
+            UpdateProjectLogMenu();
+        }
+
+        private void UpdateProjectLogMenu()
+        {
+            projectLogMenuItem.Enabled = currentProjectLog != null;
+            int count = currentProjectLog?.MessageCount ?? 0;
+            projectLogMenuItem.Text = count == 0
+                ? "Журнал проекта"
+                : $"Журнал проекта ({count})";
+        }
+
+        private void OnShowProjectLog(object sender, EventArgs e)
+        {
+            currentProjectLog?.ShowLog();
         }
 
         private void UpdateRecentProjectsMenu()
@@ -170,7 +238,69 @@ namespace EasyEPlanner.StandaloneEditor
             }
             catch (Exception ex)
             {
+                currentProjectLog?.AddException("Сохранение проекта", ex);
                 MessageBox.Show($"Ошибка сохранения: {ex.Message}",
+                    "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void OnShowProjectRepositories(object sender, EventArgs e)
+        {
+            using (var form = new ProjectRepositoriesForm(repositoryManager))
+            {
+                form.ShowDialog(this);
+            }
+        }
+
+        private void OnOpenInterprojectExchange(object sender, EventArgs e)
+        {
+            RepositoryProject mainProject;
+            RepositoryProject advancedProject;
+            using (var form = new InterprojectProjectSelectionForm(
+                repositoryManager, currentLoader?.ProjectDirectory))
+            {
+                if (form.ShowDialog(this) != DialogResult.OK)
+                {
+                    return;
+                }
+
+                mainProject = form.SelectedMainProject;
+                advancedProject = form.SelectedAdvancedProject;
+            }
+
+            try
+            {
+                ProjectManager.GetInstance().OriginalAssemblyPath =
+                    AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\');
+
+                var starter = new InterprojectExchangeStarter();
+                bool started = starter.StartStandalone(
+                    mainProject.ProjectPath,
+                    advancedProject.ProjectPath,
+                    repositoryManager.Repositories,
+                    out string error);
+                if (!started)
+                {
+                    string message = string.IsNullOrEmpty(error)
+                        ? "Не удалось загрузить выбранные проекты."
+                        : error;
+                    currentProjectLog?.AddMessage(
+                        "Межпроектный обмен: " + message);
+                    MessageBox.Show(this, message, "Ошибка",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                statusLabel.Text = "Межпроектный обмен: " +
+                    $"{mainProject.ProjectName} ↔ " +
+                    advancedProject.ProjectName;
+            }
+            catch (Exception ex)
+            {
+                currentProjectLog?.AddException(
+                    "Открытие межпроектного обмена", ex);
+                MessageBox.Show(this,
+                    $"Ошибка открытия межпроектного обмена: {ex.Message}",
                     "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

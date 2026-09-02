@@ -55,6 +55,108 @@ namespace InterprojectExchange
         }
 
         /// <summary>
+        /// Запустить редактор для двух проектов без запущенного EPLAN.
+        /// </summary>
+        /// <param name="mainProjectFolder">Каталог главного проекта</param>
+        /// <param name="advancedProjectFolder">Каталог второго проекта</param>
+        /// <param name="repositoryRoots">Корни репозиториев проектов</param>
+        /// <param name="errors">Описание ошибки запуска</param>
+        /// <returns>Редактор успешно загружен и открыт</returns>
+        public bool StartStandalone(string mainProjectFolder,
+            string advancedProjectFolder,
+            IEnumerable<string> repositoryRoots, out string errors)
+        {
+            errors = string.Empty;
+            if (!MainIoProjectNameReader.TryReadFromFolder(mainProjectFolder,
+                out string mainProjectName, out errors))
+            {
+                return false;
+            }
+
+            if (!MainIoProjectNameReader.TryReadFromFolder(
+                advancedProjectFolder, out string advancedProjectName,
+                out errors))
+            {
+                return false;
+            }
+
+            if (string.Equals(mainProjectName, advancedProjectName,
+                StringComparison.Ordinal))
+            {
+                errors = "Для обмена необходимо выбрать проекты с разными " +
+                    "значениями PAC_name.";
+                return false;
+            }
+
+            interprojectExchange.SetStandaloneMainProjectName(
+                mainProjectName);
+            interprojectExchange.Owner = this;
+
+            InterprojectProjectCatalog.Invalidate();
+            InterprojectProjectCatalog.BuildIndexFromRoots(repositoryRoots);
+            InterprojectProjectCatalog.Register(mainProjectFolder,
+                mainProjectName);
+            InterprojectProjectCatalog.Register(advancedProjectFolder,
+                advancedProjectName);
+
+            _projectsNotOpenedOnLoad.Clear();
+            form = new InterprojectExchangeForm(advancedProjectName);
+
+            if (!LoadStandaloneMainProject(mainProjectFolder,
+                mainProjectName))
+            {
+                errors = "Не удалось загрузить главный проект.";
+                form.Dispose();
+                return false;
+            }
+
+            if (!LoadProjectData(advancedProjectFolder,
+                advancedProjectName, out errors))
+            {
+                form.Dispose();
+                return false;
+            }
+
+            bool mainModelLoaded = interprojectExchange.MainModel != null;
+            if (!mainModelLoaded)
+            {
+                errors = "Не удалось создать модель главного проекта.";
+                form.Dispose();
+                return false;
+            }
+
+            ShowForm(true);
+            return true;
+        }
+
+        /// <summary>
+        /// Загрузить главный проект standalone-сеанса. Связанные с ним модели
+        /// создаются из shared.lua, но загружается только выбранный отдельно
+        /// второй проект.
+        /// </summary>
+        private bool LoadStandaloneMainProject(string projectFolder,
+            string projectName)
+        {
+            InitLuaInstance();
+            LoadScripts();
+            if (!LoadMainIOData(projectFolder, projectName))
+            {
+                return false;
+            }
+
+            GenerateSharedDevices(projectName);
+            LoadCurrentProjectSharedLuaData(projectFolder, projectName);
+            var mainModel = interprojectExchange.MainModel;
+            if (mainModel == null)
+            {
+                return false;
+            }
+
+            mainModel.PathToProject = projectFolder;
+            return true;
+        }
+
+        /// <summary>
         /// Обновление текущих устройств.
         /// </summary>
         private bool UpdateDevices()
@@ -152,14 +254,27 @@ namespace InterprojectExchange
         {
             InitLuaInstance();
             LoadScripts();
-            LoadMainIOData(pathToProjectFolder, projName);
+            if (!LoadMainIOData(pathToProjectFolder, projName))
+            {
+                errors = "Не удалось загрузить main.io.lua проекта.";
+                return false;
+            }
+
+            var loadedModel = interprojectExchange.GetModel(projName);
+            if (loadedModel == null)
+            {
+                errors = "Модель загружаемого проекта не создана.";
+                return false;
+            }
+
+            interprojectExchange.SelectModel(loadedModel);
+            GenerateSharedDevices(projName);
             LoadAdvancedProjectSharedLuaData(pathToProjectFolder, projName);
             errors = SetIPFromMainModel(projName);
             if (string.IsNullOrEmpty(errors))
             {
-                var model = interprojectExchange.GetModel(projName);
-                model.PathToProject = pathToProjectFolder;
-                model.Loaded = true;
+                loadedModel.PathToProject = pathToProjectFolder;
+                loadedModel.Loaded = true;
 
                 return true;
             }

@@ -399,6 +399,43 @@ namespace EasyEplannerTests.InterprojectExchangeTest
                 File.ReadAllLines(pathToSharedFile));
         }
 
+        [Test]
+        public void WriteSharedFile_DirectProjectPath_DoesNotCreateNestedFolder()
+        {
+            string projectName = "DIRECT_PROJECT";
+            string projectDir = Path.Combine(
+                TestContext.CurrentContext.TestDirectory,
+                "InterprojectExchange.Test", Guid.NewGuid().ToString());
+            Directory.CreateDirectory(projectDir);
+            File.WriteAllText(Path.Combine(projectDir, "main.io.lua"),
+                $"PAC_name = '{projectName}'", Encoding.UTF8);
+
+            var sharedFileData = new List<string>
+            {
+                "shared_devices =",
+                "{",
+                "}",
+            };
+
+            try
+            {
+                InvokeWriteSharedFile(projectName, projectDir,
+                    sharedFileData);
+
+                Assert.Multiple(() =>
+                {
+                    Assert.IsTrue(File.Exists(Path.Combine(projectDir,
+                        "shared.lua")));
+                    Assert.IsFalse(File.Exists(Path.Combine(projectDir,
+                        projectName, "shared.lua")));
+                });
+            }
+            finally
+            {
+                Directory.Delete(projectDir, true);
+            }
+        }
+
         private static void InvokeWriteSharedFile(string projectName,
             string projectsDir, List<string> sharedFileData)
         {

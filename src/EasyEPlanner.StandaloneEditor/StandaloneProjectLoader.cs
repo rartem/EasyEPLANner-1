@@ -15,6 +15,7 @@ namespace EasyEPlanner.StandaloneEditor
         public string ProjectDirectory { get; private set; }
         public string ProjectName { get; private set; }
         public string OriginalMainIoLua { get; private set; }
+        public StandaloneLog ProjectLog { get; private set; }
 
         /// <summary>
         /// Загрузить проект из указанного каталога.
@@ -28,19 +29,23 @@ namespace EasyEPlanner.StandaloneEditor
                 return false;
             }
 
+            ProjectDirectory = projectDirectory;
+            ProjectName = new DirectoryInfo(projectDirectory).Name;
+            ProjectLog = new StandaloneLog(projectDirectory);
+            Logs.Init(ProjectLog);
+
             string objectsPath = Path.Combine(projectDirectory,
                 ProjectDescriptionSaver.MainTechObjectsFileName);
             if (!File.Exists(objectsPath))
             {
+                ProjectLog.AddMessage("Отсутствует обязательный файл " +
+                    ProjectDescriptionSaver.MainTechObjectsFileName + ".");
                 MessageBox.Show(
                     $"В каталоге проекта отсутствует файл " +
                     $"{ProjectDescriptionSaver.MainTechObjectsFileName}.",
                     "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
-
-            ProjectDirectory = projectDirectory;
-            ProjectName = new DirectoryInfo(projectDirectory).Name;
 
             InitializeEnvironment();
 
@@ -52,6 +57,7 @@ namespace EasyEPlanner.StandaloneEditor
             }
             catch (Exception ex)
             {
+                ProjectLog.AddException("Загрузка проекта", ex);
                 MessageBox.Show($"Ошибка загрузки проекта: {ex.Message}",
                     "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
@@ -73,7 +79,7 @@ namespace EasyEPlanner.StandaloneEditor
                 .TrimEnd('\\');
             ProjectManager.GetInstance().OriginalAssemblyPath = assemblyPath;
 
-            Logs.Init(new StandaloneLog());
+            Logs.Init(ProjectLog);
 
             IOManager.GetInstance();
             DeviceManager.GetInstance();

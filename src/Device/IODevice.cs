@@ -102,11 +102,13 @@ namespace EplanDevice
             string objectName, int objectNumber) : this(name, eplanName,
                 description, deviceNumber, objectName, objectNumber)
         {
-            try
+            bool parsed = Enum.TryParse(deviceType, true,
+                out DeviceType parsedType);
+            if (parsed)
             {
-                dType = (DeviceType)Enum.Parse(typeof(DeviceType), deviceType, true);
+                dType = parsedType;
             }
-            catch (Exception)
+            else
             {
                 dType = DeviceType.NONE;
             }

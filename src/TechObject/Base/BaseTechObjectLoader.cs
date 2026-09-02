@@ -64,9 +64,11 @@ namespace TechObject
             else
             {
                 WriteDefaultObjectsDescriptionTemplate(pathToDir);
-                MessageBox.Show("Файлы с описанием базовых объектов не " +
+                string message = "Файлы с описанием базовых объектов не " +
                     "найдены. Будет создан пустой файл с шаблоном описания. " +
-                    $"Путь к каталогу: {pathToDir}", "Ошибка",
+                    $"Путь к каталогу: {pathToDir}";
+                Logs.AddMessage(message + "\n");
+                MessageBox.Show(message, "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -142,6 +144,8 @@ namespace TechObject
             }
             catch (Exception ex)
             {
+                Logs.AddMessage("Ошибка обработки Lua-скрипта с описанием " +
+                    $"базовых объектов: {ex}\n");
                 MessageBox.Show(ex.Message + ". Исправьте скрипт вручную.",
                     "Ошибка обработки Lua-скрипта с описанием " +
                     "базовых объектов.");
@@ -162,6 +166,8 @@ namespace TechObject
             }
             catch (Exception ex)
             {
+                Logs.AddMessage("Ошибка инициализации базовых объектов: " +
+                    $"{ex}\n");
                 MessageBox.Show("Ошибка обработки Lua-скрипта с " +
                     " инициализацией базовых объектов: " + ex.Message + ".\n" +
                     "Source: " + ex.Source);

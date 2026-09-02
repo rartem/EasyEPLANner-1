@@ -77,12 +77,13 @@ namespace EplanDevice
         /// </summary>
         public virtual string SetSubType(string subType)
         {
-            try
+            bool parsed = Enum.TryParse(subType, true,
+                out DeviceSubType parsedSubType);
+            if (parsed)
             {
-                dSubType = (DeviceSubType)Enum.Parse(typeof(DeviceSubType),
-                    subType.ToUpper());
+                dSubType = parsedSubType;
             }
-            catch
+            else
             {
                 dSubType = DeviceSubType.NONE;
             }

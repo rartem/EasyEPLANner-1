@@ -604,14 +604,14 @@ namespace InterprojectExchange
             List<string> sharedFileData)
         {
             var model = interprojectExchange.GetModel(projectName);
-            string path = Path.Combine(model.PathToProject, 
-                projectName, SharedFile);
+            string projectFolder = GetProjectFolder(model, projectName);
+            string path = Path.Combine(projectFolder, SharedFile);
 
             if(!File.Exists(path))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 WriteSharedFileData(path, sharedFileData,
-                    EasyEPlanner.EncodingDetector.DetectFileEncoding(path));
+                    DetectProjectEncoding(projectFolder));
                 return;
             }
 
@@ -623,6 +623,46 @@ namespace InterprojectExchange
             }
 
             WriteSharedFileData(path, sharedFileData, encoding);
+        }
+
+        /// <summary>
+        /// Поддержать модели со старым путем к корню репозитория и модели,
+        /// содержащие непосредственный путь к каталогу проекта.
+        /// </summary>
+        private static string GetProjectFolder(IProjectModel model,
+            string projectName)
+        {
+            string configuredPath = model.PathToProject;
+            string directMainIo = Path.Combine(configuredPath,
+                MainIoProjectNameReader.MainIoFileName);
+            if (File.Exists(directMainIo) || string.Equals(
+                Path.GetFileName(configuredPath.TrimEnd('\\', '/')),
+                projectName, StringComparison.OrdinalIgnoreCase))
+            {
+                return configuredPath;
+            }
+
+            return Path.Combine(configuredPath, projectName);
+        }
+
+        private static Encoding DetectProjectEncoding(string projectFolder)
+        {
+            string[] referenceFiles =
+            {
+                Path.Combine(projectFolder, "main.objects.lua"),
+                Path.Combine(projectFolder,
+                    MainIoProjectNameReader.MainIoFileName),
+            };
+
+            foreach (string referenceFile in referenceFiles)
+            {
+                if (File.Exists(referenceFile))
+                {
+                    return EncodingDetector.DetectFileEncoding(referenceFile);
+                }
+            }
+
+            return EncodingDetector.UTF8;
         }
 
         private static void WriteSharedFileData(string path,

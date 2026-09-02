@@ -150,6 +150,13 @@ namespace InterprojectExchange
         void SelectModel(IProjectModel selectingModel);
 
         /// <summary>
+        /// Задать имя главного проекта для работы без запущенного EPLAN.
+        /// Пустое значение возвращает определение проекта через EPLAN.
+        /// </summary>
+        /// <param name="projectName">Имя проекта (PAC_name)</param>
+        void SetStandaloneMainProjectName(string projectName);
+
+        /// <summary>
         /// Изменение устройства в связи текущего проекта
         /// </summary>
         /// <param name="signalType">Тип сигнала</param>

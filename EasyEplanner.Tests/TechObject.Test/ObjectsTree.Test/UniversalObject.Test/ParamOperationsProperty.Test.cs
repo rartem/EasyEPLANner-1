@@ -1,6 +1,8 @@
 ﻿using Editor;
 using Moq;
 using NUnit.Framework;
+using System;
+using System.Runtime.ExceptionServices;
 using TechObject;
 
 namespace TestsTechObject
@@ -44,6 +46,42 @@ namespace TestsTechObject
                 Assert.AreEqual(expectedValue, property.Value);
             });
             
+        }
+
+        [Test]
+        public void SetNewValue_Invalid_DoesNotThrowFirstChanceException()
+        {
+            var property = new ParamOperationsProperty("Name", -1, -1);
+            var techObject = new TechObject.TechObject("", GetN => 1, 1, 2,
+                "", -1, "", "", null);
+            techObject.ModesManager.Insert();
+
+            var parametersManager = new Mock<ITreeViewItem>();
+            parametersManager.Setup(i => i.Parent).Returns(techObject);
+
+            var parameters = new Mock<ITreeViewItem>();
+            parameters.Setup(i => i.Parent).Returns(parametersManager.Object);
+
+            var parameter = new Param(GetN => 1, "param");
+            parameter.Parent = parameters.Object;
+            property.Parent = parameter;
+
+            int exceptionsCount = 0;
+            EventHandler<FirstChanceExceptionEventArgs> handler =
+                (sender, args) => exceptionsCount++;
+            AppDomain.CurrentDomain.FirstChanceException += handler;
+            try
+            {
+                property.SetNewValue("-1");
+                property.SetNewValue("abc");
+                property.SetNewValue("2");
+            }
+            finally
+            {
+                AppDomain.CurrentDomain.FirstChanceException -= handler;
+            }
+
+            Assert.AreEqual(0, exceptionsCount);
         }
     }
 }

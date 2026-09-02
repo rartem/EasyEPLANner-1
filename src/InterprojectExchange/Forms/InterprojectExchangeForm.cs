@@ -18,8 +18,21 @@ namespace InterprojectExchange
     public partial class InterprojectExchangeForm : Form
     {
         public InterprojectExchangeForm()
+            : this(null)
+        {
+        }
+
+        /// <summary>
+        /// Создать форму с заранее выбранным связанным проектом.
+        /// </summary>
+        /// <param name="preferredAdvancedProjectName">Имя второго проекта
+        /// (PAC_name)</param>
+        public InterprojectExchangeForm(string preferredAdvancedProjectName)
         {
             InitializeComponent();
+
+            this.preferredAdvancedProjectName =
+                preferredAdvancedProjectName;
 
             // Получение основных экземпляров классов, подписка на событие
             // обновления списков через фильтр
@@ -44,6 +57,7 @@ namespace InterprojectExchange
 
         private FilterConfiguration filterConfiguration;
         private IInterprojectExchange interprojectExchange;
+        private readonly string preferredAdvancedProjectName;
 
         private List<ListViewItem> currProjItems;
         private List<ListViewItem> advProjItems;
@@ -94,12 +108,22 @@ namespace InterprojectExchange
             LoadCurrentProjectDevices();
             CheckBindingSignals();
 
-            var frstLoadedPrj = interprojectExchange.LoadedAdvancedModelNames
+            var firstLoadedProject = interprojectExchange
+                .LoadedAdvancedModelNames
                 .FirstOrDefault(m => interprojectExchange.GetModel(m).Loaded);
+            bool preferredProjectLoaded = !string.IsNullOrEmpty(
+                preferredAdvancedProjectName) &&
+                interprojectExchange.GetModel(preferredAdvancedProjectName)?
+                    .Loaded == true;
+            string initialProject = preferredProjectLoaded
+                ? preferredAdvancedProjectName
+                : firstLoadedProject;
             if (advProjNameComboBox.Items.Count > 0)
             {
-                advProjNameComboBox.SelectedIndex = string.IsNullOrEmpty(frstLoadedPrj)? 
-                    0 : advProjNameComboBox.Items.IndexOf(frstLoadedPrj);
+                advProjNameComboBox.SelectedIndex = string.IsNullOrEmpty(
+                    initialProject)
+                    ? 0
+                    : advProjNameComboBox.Items.IndexOf(initialProject);
             }
 
             interprojectExchange.MainModel.SelectedAdvancedProject =

@@ -75,13 +75,32 @@ namespace EasyEPlanner.StandaloneEditor
         private static void LogException(Exception ex)
         {
             if (ex == null)
+            {
                 return;
+            }
+
+            try
+            {
+                Logs.AddMessage("Необработанное исключение standalone-" +
+                    $"редактора:\n{ex}\n");
+            }
+            catch (Exception)
+            {
+                // Ошибка журналирования не должна скрывать исходную ошибку.
+            }
 
             string path = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
                 "standalone_error.log");
-            File.AppendAllText(path,
-                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\n{ex}\n\n");
+            try
+            {
+                File.AppendAllText(path,
+                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\n{ex}\n\n");
+            }
+            catch (Exception)
+            {
+                // В аварийном обработчике нельзя создавать новое исключение.
+            }
         }
     }
 }

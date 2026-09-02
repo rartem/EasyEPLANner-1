@@ -264,7 +264,10 @@ namespace EplanDevice
         {
             foreach (IODevice device in devices)
             {
-                if (device.Name == devName)
+                if (string.Equals(device.Name, devName,
+                    StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(device.EplanName, devName,
+                    StringComparison.OrdinalIgnoreCase))
                 {
                     return device;
                 }
@@ -292,6 +295,16 @@ namespace EplanDevice
 
         public IODevice GetDevice(string devName)
         {
+            IODevice existingDevice = devices.FirstOrDefault(device =>
+                string.Equals(device.Name, devName,
+                    StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(device.EplanName, devName,
+                    StringComparison.OrdinalIgnoreCase));
+            if (existingDevice != null)
+            {
+                return existingDevice;
+            }
+
             string name;
             string eplanName;
             string objectName;
@@ -330,6 +343,16 @@ namespace EplanDevice
 
         public int GetDeviceIndex(string devName)
         {
+            int existingDeviceIndex = devices.FindIndex(device =>
+                string.Equals(device.Name, devName,
+                    StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(device.EplanName, devName,
+                    StringComparison.OrdinalIgnoreCase));
+            if (existingDeviceIndex >= 0)
+            {
+                return existingDeviceIndex;
+            }
+
             string name;
             string eplanName;
             string objectName;

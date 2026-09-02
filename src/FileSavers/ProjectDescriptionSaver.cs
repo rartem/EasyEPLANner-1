@@ -30,6 +30,15 @@ namespace EasyEPlanner
             string pathToMainPluaFile = Path
                 .Combine(pathToSystemFiles, mainProgramPatternFileName);
 
+            if (!File.Exists(pathToMainPluaFile))
+            {
+                string message = $"Не найден шаблон {mainProgramFileName}";
+                Logs.AddMessage(message + "\n");
+                MessageBox.Show(message, "Ошибка", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
             try
             {
                 var reader = new StreamReader(pathToMainPluaFile,
@@ -38,8 +47,10 @@ namespace EasyEPlanner
                 reader.Close();
                 mainProgramFilePatternIsLoaded = true;
             }
-            catch
+            catch (Exception ex)
             {
+                Logs.AddMessage($"Ошибка загрузки шаблона " +
+                    $"{mainProgramFileName}: {ex}\n");
                 MessageBox.Show($"Не найден шаблон {mainProgramFileName}",
                     "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }

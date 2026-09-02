@@ -28,8 +28,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\src\EasyEPlanner.StandaloneEditor\StandaloneIoLoader.cs"
+             Link="StandaloneEditor\StandaloneIoLoader.cs" />
+    <Compile Include="..\src\EasyEPlanner.StandaloneEditor\StandaloneLog.cs"
+             Link="StandaloneEditor\StandaloneLog.cs" />
+    <Compile Include="..\src\EasyEPlanner.StandaloneEditor\ProjectRepositoryManager.cs"
+             Link="StandaloneEditor\ProjectRepositoryManager.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Aga.Controls">
       <HintPath>..\src\libs\Aga.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="LuaInterface">
+      <HintPath>..\src\LuaInterface\LuaInterface.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
