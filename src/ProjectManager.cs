@@ -724,8 +724,14 @@ namespace EasyEPlanner
         /// <returns></returns>
         public string GetOstisHelpSystemLink()
         {
+            string path = GetOriginalAssemblyPath();
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new FileNotFoundException();
+            }
+
             var configFile = new PInvoke.IniFile(Path.Combine(
-                GetOriginalAssemblyPath(),
+                path,
                 StaticHelper.CommonConst.ConfigFileName));
             string link = configFile.ReadString("helpSystem", "address", null);
             if (string.IsNullOrEmpty(link))
@@ -741,8 +747,14 @@ namespace EasyEPlanner
         /// <returns></returns>
         public string GetOstisHelpSystemMainPageLink()
         {
+            string path = GetOriginalAssemblyPath();
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new FileNotFoundException();
+            }
+
             var configFile = new PInvoke.IniFile(Path.Combine(
-                GetOriginalAssemblyPath(),
+                path,
                 StaticHelper.CommonConst.ConfigFileName));
             string link = configFile.ReadString("helpSystem", "mainAddress ", 
                 null);

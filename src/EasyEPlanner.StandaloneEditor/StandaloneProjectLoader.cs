@@ -59,6 +59,7 @@ namespace EasyEPlanner.StandaloneEditor
 
             Editor.Editor.StandaloneMode = true;
             var editor = Editor.Editor.GetInstance();
+
             var techObjectManager = TechObjectManager.GetInstance();
             techObjectManager.AddParent(null);
             editor.EditorForm.Init(techObjectManager);

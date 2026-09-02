@@ -17,6 +17,7 @@
     <SccAuxPath>Svn</SccAuxPath>
     <SccProvider>SubversionScc</SccProvider>
     <TargetFrameworkProfile />
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition="'$(DesignTimeBuild)' == 'true'">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -86,7 +87,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>LuaInterface\LuaInterface.dll</HintPath>
     </Reference>
-    <Reference Include="ObjectListView, Version=2.9.1.23884, Culture=neutral, PublicKeyToken=8176a5df63fd6f38, processorArchitecture=MSIL">
+    <Reference Include="ObjectListView, Version=2.9.1.26550, Culture=neutral, PublicKeyToken=b1c5bf581481bcd4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>libs\ObjectListView.dll</HintPath>
     </Reference>
@@ -113,6 +114,26 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Resources.Extensions">
+      <HintPath>libs\System.Resources.Extensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>libs\System.Memory.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>libs\System.Buffers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>libs\System.Numerics.Vectors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>libs\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppConfiguarationManager.cs" />
@@ -312,6 +333,7 @@
     </Compile>
     <Compile Include="Editor\DrawInfo.cs" />
     <Compile Include="Editor\Editor.cs" />
+    <Compile Include="Editor\StandaloneEditorCallbacks.cs" />
     <Compile Include="Editor\IBaseObjChangeable.cs" />
     <Compile Include="Editor\IHelperItem.cs" />
     <Compile Include="Editor\ImageIndexEnum.cs" />

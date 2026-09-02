@@ -172,7 +172,7 @@
 -- 4. nameLua - LUA-имя параметра
 
 base_tech_objects = function()
-local object_float_parameters = get_objects_float_parameters()
+    local object_float_parameters = get_objects_float_parameters()
     local object_float_runtime_parameters = get_runtime_float_parameters()
 
     return

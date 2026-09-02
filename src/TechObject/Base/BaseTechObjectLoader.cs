@@ -1,4 +1,4 @@
-﻿using LuaInterface;
+using LuaInterface;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -200,8 +200,8 @@ namespace TechObject
         public BaseTechObject AddBaseObject(string name, string eplanName,
             int s88Level, string basicName, string bindingName, bool isPID,
             string luaModuleName, string monitorName, bool deprecated,
-            bool denyBindingToUnit, int techType = 2,
-            string defaultNameEplan = "TANK")
+            bool denyBindingToUnit, int techType,
+            string defaultNameEplan)
         {
             return baseTechObjectManager.AddBaseObject(name, eplanName,
                 s88Level, basicName, bindingName, isPID, luaModuleName,

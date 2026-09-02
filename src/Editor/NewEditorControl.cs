@@ -25,6 +25,7 @@ namespace Editor
         {
             InitializeComponent();
             InitObjectListView();
+            InitSelectDevicesMenuItem();
             SetUpToolsHideFromConfig();
 
             dialogCallbackDelegate = new PI.HookProc(DlgWndHookCallbackFunction);
@@ -39,6 +40,33 @@ namespace Editor
                 => (obj as ITreeViewItem).Filter(searchText, hideEmptyItemsBtn.Checked));
 
             wasInit = false;
+        }
+
+        /// <summary>
+        /// Создание пункта контекстного меню для выбора устройств
+        /// в standalone-режиме.
+        /// </summary>
+        private void InitSelectDevicesMenuItem()
+        {
+            selectDevicesToolStripMenuItem = new ToolStripMenuItem();
+            selectDevicesToolStripMenuItem.Name = "selectDevicesToolStripMenuItem";
+            selectDevicesToolStripMenuItem.Size = new System.Drawing.Size(224, 22);
+            selectDevicesToolStripMenuItem.Text = "Выбрать устройства...";
+            selectDevicesToolStripMenuItem.Click +=
+                new EventHandler(selectDevicesToolStripMenuItem_Click);
+            contextMenuStrip.Items.Insert(0, selectDevicesToolStripMenuItem);
+        }
+
+        /// <summary>
+        /// Обработчик выбора устройств из контекстного меню.
+        /// </summary>
+        private void selectDevicesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var item = GetActiveItem();
+            if (item is null || !item.IsUseDevList || !Editor.StandaloneMode)
+                return;
+
+            ShowStandaloneDeviceSelector(item);
         }
 
         /// <summary>
@@ -1110,6 +1138,22 @@ namespace Editor
         }
 
         /// <summary>
+        /// Показать standalone-окно выбора устройств.
+        /// </summary>
+        /// <param name="item">Редактируемый элемент.</param>
+        private void ShowStandaloneDeviceSelector(ITreeViewItem item)
+        {
+            string currentValue = item.EditText[1] ?? string.Empty;
+            string newValue = StandaloneEditorCallbacks.SelectDevices
+                ?.Invoke(this, currentValue);
+
+            if (newValue != null)
+            {
+                SetNewVal(newValue);
+            }
+        }
+
+        /// <summary>
         /// Функции установки нового значения в виде строки в редакторе.
         /// </summary>
         /// <param name="newVal">Новое значение</param>
@@ -1984,6 +2028,7 @@ namespace Editor
             if (items.Count <= 0 || item is null)
                 return;
 
+            ContextMenuStrip_SelectDevices(item, singleSelection);
             ContextMenuStrip_CreateGenericAndGrouping(item, items, singleSelection);
             ContextMenuStrip_Autocomplete(item);
             ContextMenuStrip_InsertableAndDeletable(item, items, singleSelection);
@@ -1991,6 +2036,13 @@ namespace Editor
             ContextMenuStrip_PasteableAndReplaceable(item, items, singleSelection);
             ContextMenuStrip_Movable(item, items, singleSelection);
             ContextMenuStrip_ToolTips(item, items, singleSelection);
+        }
+
+        private void ContextMenuStrip_SelectDevices(ITreeViewItem item, bool singleSelection)
+        {
+            selectDevicesToolStripMenuItem.Visible = Editor.StandaloneMode
+                && singleSelection && item?.IsUseDevList == true;
+            selectDevicesToolStripMenuItem.Enabled = Editable;
         }
 
         private void ContextMenuStrip_CreateGenericAndGrouping(ITreeViewItem item, List<ITreeViewItem> items, bool singleSelection)
@@ -2324,5 +2376,10 @@ namespace Editor
         // Редакторы для editorTView
         ComboBox comboBoxCellEditor;
         TextBox textBoxCellEditor;
+
+        /// <summary>
+        /// Пункт контекстного меню для выбора устройств в standalone-режиме.
+        /// </summary>
+        private ToolStripMenuItem selectDevicesToolStripMenuItem;
     }
 }

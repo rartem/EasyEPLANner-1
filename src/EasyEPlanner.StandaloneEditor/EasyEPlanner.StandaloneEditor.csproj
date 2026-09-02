@@ -12,6 +12,7 @@
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <LangVersion>preview</LangVersion>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -55,11 +56,41 @@
       <HintPath>..\LuaInterface\LuaInterface.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Resources.Extensions">
+      <HintPath>..\libs\System.Resources.Extensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>..\libs\System.Memory.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>..\libs\System.Buffers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>..\libs\System.Numerics.Vectors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>..\libs\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ObjectListView">
+      <HintPath>..\libs\ObjectListView.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="MainForm.cs" />
     <Compile Include="RecentProjectsManager.cs" />
+    <Compile Include="StandaloneDevicesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StandaloneDevicesForm.Designer.cs">
+      <DependentUpon>StandaloneDevicesForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="StandaloneLog.cs" />
     <Compile Include="StandaloneProjectLoader.cs" />
     <Compile Include="StandaloneIoLoader.cs" />
@@ -68,10 +99,6 @@
     <ProjectReference Include="..\EasyEPlanner.csproj">
       <Project>{20719BA0-8C3C-421E-94E2-461C32E59631}</Project>
       <Name>EasyEPlanner</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\submodule\ObjectListview\ObjectListView\ObjectListView2012.csproj">
-      <Project>{18FEDA0C-D147-4286-B39A-01204808106A}</Project>
-      <Name>ObjectListView2012</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\submodule\TreeViewAdv\Aga.Controls\Aga.Controls.csproj">
       <Project>{E73BB233-D88B-44A7-A98F-D71EE158381D}</Project>
