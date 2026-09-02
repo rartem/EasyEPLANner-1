@@ -22,6 +22,7 @@ namespace InterprojectExchange
             interprojectExchangeStarter = null;
             interprojectExchangeModels.Clear();
             standaloneMainProjectName = null;
+            standaloneProjectsPath = null;
             InterprojectProjectCatalog.Invalidate();
         }
 
@@ -30,6 +31,13 @@ namespace InterprojectExchange
             standaloneMainProjectName = string.IsNullOrWhiteSpace(projectName)
                 ? null
                 : projectName.Trim();
+        }
+
+        public void SetStandaloneProjectsPath(string projectsPath)
+        {
+            standaloneProjectsPath = string.IsNullOrWhiteSpace(projectsPath)
+                ? null
+                : projectsPath.Trim();
         }
 
         public void AddModel(IProjectModel model)
@@ -406,7 +414,7 @@ namespace InterprojectExchange
         {
             get
             {
-                return ProjectManager.GetInstance().GetPtusaProjectsPath("");
+                return standaloneProjectsPath ?? GetDefaultProjectsPath();
             }
         }
 
@@ -458,14 +466,7 @@ namespace InterprojectExchange
             {
                 if (eProjectManager is null)
                 {
-                    try
-                    {
-                        eProjectManager = EProjectManager.GetInstance();
-                    }
-                    catch
-                    {
-                        // skip EProjectManager int TESTS
-                    }
+                    eProjectManager = TryGetEProjectManager();
                 }
 
                 interprojectExchange = new InterprojectExchange();
@@ -474,8 +475,40 @@ namespace InterprojectExchange
             return interprojectExchange;
         }
 
+        /// <summary>
+        /// Получить экземпляр для standalone-редактора без загрузки EPLAN API.
+        /// </summary>
+        public static IInterprojectExchange GetStandaloneInstance()
+        {
+            if (interprojectExchange == null)
+            {
+                interprojectExchange = new InterprojectExchange();
+            }
+
+            return interprojectExchange;
+        }
+
+        private static IEProjectManager TryGetEProjectManager()
+        {
+            try
+            {
+                return EProjectManager.GetInstance();
+            }
+            catch
+            {
+                // EPLAN API недоступен в тестах и standalone-редакторе.
+                return null;
+            }
+        }
+
+        private static string GetDefaultProjectsPath()
+        {
+            return ProjectManager.GetInstance().GetPtusaProjectsPath("");
+        }
+
         private static IEProjectManager eProjectManager = null;
         private string standaloneMainProjectName;
+        private string standaloneProjectsPath;
         private EditMode editMode;
         private InterprojectExchangeStarter interprojectExchangeStarter;
         private static InterprojectExchange interprojectExchange;

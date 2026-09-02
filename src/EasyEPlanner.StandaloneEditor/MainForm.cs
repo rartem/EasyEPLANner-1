@@ -270,10 +270,8 @@ namespace EasyEPlanner.StandaloneEditor
 
             try
             {
-                ProjectManager.GetInstance().OriginalAssemblyPath =
-                    AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\');
-
-                var starter = new InterprojectExchangeStarter();
+                var starter = new InterprojectExchangeStarter(
+                    standaloneMode: true);
                 bool started = starter.StartStandalone(
                     mainProject.ProjectPath,
                     advancedProject.ProjectPath,

@@ -157,6 +157,12 @@ namespace InterprojectExchange
         void SetStandaloneMainProjectName(string projectName);
 
         /// <summary>
+        /// Задать корневую папку проектов для работы без запущенного EPLAN.
+        /// </summary>
+        /// <param name="projectsPath">Корневая папка репозитория</param>
+        void SetStandaloneProjectsPath(string projectsPath);
+
+        /// <summary>
         /// Изменение устройства в связи текущего проекта
         /// </summary>
         /// <param name="signalType">Тип сигнала</param>

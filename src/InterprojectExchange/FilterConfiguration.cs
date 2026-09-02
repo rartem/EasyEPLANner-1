@@ -233,6 +233,16 @@ namespace InterprojectExchange
         }
 
         /// <summary>
+        /// Задать каталог конфигурации для standalone-редактора.
+        /// </summary>
+        /// <param name="configurationDirectory">Каталог configuration.ini</param>
+        public static void SetStandaloneConfigurationDirectory(
+            string configurationDirectory)
+        {
+            standaloneConfigurationDirectory = configurationDirectory;
+        }
+
+        /// <summary>
         /// Первоначальная настройка фильтра
         /// </summary>
         private void SetUpFilterParameters()
@@ -380,8 +390,8 @@ namespace InterprojectExchange
         /// </summary>
         private FilterConfiguration()
         {
-            string pathToDir = ProjectManager.GetInstance()
-                .OriginalAssemblyPath;
+            string pathToDir = standaloneConfigurationDirectory ??
+                GetDefaultConfigurationDirectory();
             pathToConfig = Path.Combine(pathToDir, 
                 StaticHelper.CommonConst.ConfigFileName);
             SetUpFilterParameters();
@@ -398,7 +408,13 @@ namespace InterprojectExchange
         }
 
         private static FilterConfiguration filterConfiguration;
+        private static string standaloneConfigurationDirectory;
         private string pathToConfig;
         private FilterForm filterForm;
+
+        private static string GetDefaultConfigurationDirectory()
+        {
+            return ProjectManager.GetInstance().OriginalAssemblyPath;
+        }
     }
 }

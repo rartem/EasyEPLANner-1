@@ -16,10 +16,13 @@ namespace InterprojectExchange
     /// </summary>
     public class InterprojectExchangeStarter
     {
-        public InterprojectExchangeStarter()
+        public InterprojectExchangeStarter(bool standaloneMode = false)
         {
-            interprojectExchange = InterprojectExchange.GetInstance();
+            interprojectExchange = standaloneMode
+                ? InterprojectExchange.GetStandaloneInstance()
+                : InterprojectExchange.GetInstance();
             interprojectExchange.Clear();
+            isStandaloneMode = standaloneMode;
         }
 
         /// <summary>
@@ -90,7 +93,13 @@ namespace InterprojectExchange
 
             interprojectExchange.SetStandaloneMainProjectName(
                 mainProjectName);
+            interprojectExchange.SetStandaloneProjectsPath(repositoryRoots?
+                .FirstOrDefault());
             interprojectExchange.Owner = this;
+            standaloneSystemFilesPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory, "Lua");
+            FilterConfiguration.SetStandaloneConfigurationDirectory(
+                AppDomain.CurrentDomain.BaseDirectory);
 
             InterprojectProjectCatalog.Invalidate();
             InterprojectProjectCatalog.BuildIndexFromRoots(repositoryRoots);
@@ -409,8 +418,9 @@ namespace InterprojectExchange
         /// </summary>
         private void LoadScripts()
         {
-            string systemFilesPath = ProjectManager.GetInstance()
-                .SystemFilesPath;
+            string systemFilesPath = isStandaloneMode
+                ? standaloneSystemFilesPath
+                : GetSystemFilesPath();
             // Загрузка скрипта для чтения shared.lua
             string pathToSharedLua = Path.Combine(systemFilesPath, 
                 sharedLuaIntializerFile);
@@ -659,7 +669,14 @@ namespace InterprojectExchange
         private readonly IInterprojectExchange interprojectExchange;
         private InterprojectExchangeSaver interprojectExchangeSaver;
         private readonly List<string> _projectsNotOpenedOnLoad = new List<string>();
+        private readonly bool isStandaloneMode;
+        private string standaloneSystemFilesPath;
 
         Lua lua;
+
+        private static string GetSystemFilesPath()
+        {
+            return ProjectManager.GetInstance().SystemFilesPath;
+        }
     }
 }

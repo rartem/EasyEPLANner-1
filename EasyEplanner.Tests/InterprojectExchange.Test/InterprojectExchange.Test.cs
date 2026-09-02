@@ -14,6 +14,39 @@ namespace EasyEplannerTests.InterprojectExchangeTest
     public class InterprojectExchangeTest
     {
         [Test]
+        public void GetStandaloneInstance_DoesNotCreateEProjectManager()
+        {
+            Type exchangeType = typeof(InterprojectExchange.InterprojectExchange);
+            FieldInfo managerField = exchangeType.GetField("eProjectManager",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            FieldInfo instanceField = exchangeType.GetField(
+                "interprojectExchange",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            object previousManager = managerField.GetValue(null);
+            object previousInstance = instanceField.GetValue(null);
+
+            try
+            {
+                managerField.SetValue(null, null);
+                instanceField.SetValue(null, null);
+
+                var exchange = InterprojectExchange.InterprojectExchange
+                    .GetStandaloneInstance();
+
+                Assert.Multiple(() =>
+                {
+                    Assert.IsNotNull(exchange);
+                    Assert.IsNull(managerField.GetValue(null));
+                });
+            }
+            finally
+            {
+                managerField.SetValue(null, previousManager);
+                instanceField.SetValue(null, previousInstance);
+            }
+        }
+
+        [Test]
         public void CheckBindingSignalsTest_CheckErrorString()
         {
             string expected = "remote_gateways: adv_prj - AI\nshared_devices: adv_prj - AI\n";
