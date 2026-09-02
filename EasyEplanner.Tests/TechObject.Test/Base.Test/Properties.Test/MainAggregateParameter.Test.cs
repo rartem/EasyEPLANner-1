@@ -14,6 +14,75 @@ namespace TechObject.Tests
             Assert.IsFalse(parameter.NeedDisable);
         }
 
+        [Test]
+        public void Check_ChildParameterWithDisplayObjects_RemovesUnknownParameter()
+        {
+            var tankBTO = new BaseTechObject()
+            {
+                EplanName = "TANK",
+                Name = "Танк",
+                BaseOperations =
+                {
+                    new BaseOperation("Наполнение", "FILL",
+                        new List<BaseParameter>(),
+                        new Dictionary<string, List<BaseStep>>())
+                    {
+                        DefaultPosition = 1,
+                    }
+                }
+            };
+
+            var tank = new TechObject("", getN => 1, 1, 2, "", -1, "", "",
+                tankBTO);
+            tank.SetUpFromBaseTechObject();
+            tank.GetParamsManager().CompleteInit();
+
+            var tankBaseOperation = tank.ModesManager.Modes[0].BaseOperation;
+            var aggregateBTO = new BaseTechObject();
+            var mainAggregateParameter = aggregateBTO.AddMainAggregateParameter(
+                "MAIN", "использовать узел", "true");
+            var childParameter = new ActiveParameter("PARAMETER", "Параметр",
+                "", new List<BaseParameter.DisplayObject>
+                {
+                    BaseParameter.DisplayObject.Parameters,
+                });
+
+            var parameters = new List<BaseParameter>
+            {
+                childParameter,
+                mainAggregateParameter,
+            };
+            tankBaseOperation.AddProperties(parameters, aggregateBTO);
+
+            var aggregateParameter = tankBaseOperation.Properties
+                .First(p => p.LuaName == "PARAMETER");
+            aggregateParameter.SetNewValue("UNKNOWN_PARAMETER");
+            aggregateParameter.Check();
+
+            Assert.AreEqual(string.Empty, aggregateParameter.Value);
+        }
+
+        [Test]
+        public void Filter_ParentMatches_ShowsChildParameter()
+        {
+            var parent = new MainAggregateParameter("MAIN",
+                "Использовать агрегат", "true");
+            var child = new ActiveParameter("PARAMETER", "Дочерний параметр");
+            child.Parent = parent;
+            parent.Parameters.Add(child);
+
+            var result = parent.Filter("агрегат", hideEmptyItems: false);
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsTrue(result);
+                Assert.IsTrue(parent.Filtred);
+                Assert.IsTrue(parent.ThisOrParentsContains);
+                Assert.IsTrue(child.Filtred);
+                Assert.IsTrue(child.ThisOrParentsContains);
+            });
+        }
+
 
         [Test]
         public void Autocomplete()
