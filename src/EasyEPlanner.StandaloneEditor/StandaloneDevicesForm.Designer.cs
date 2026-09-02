@@ -154,10 +154,10 @@ namespace EasyEPlanner.StandaloneEditor
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
             this.ClientSize = new System.Drawing.Size(434, 405);
+            this.Controls.Add(this.checkedListBox);
             this.Controls.Add(this.panelFilters);
             this.Controls.Add(this.labelInfo);
             this.Controls.Add(this.panelButtons);
-            this.Controls.Add(this.checkedListBox);
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(350, 300);
             this.Name = "StandaloneDevicesForm";
