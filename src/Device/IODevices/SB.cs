@@ -26,6 +26,9 @@ namespace EplanDevice
             {
                 case "SB":
                 case "":
+                    parameters.Add(Parameter.P_DT, 0);
+                    parameters.Add(Parameter.P_DTO, -1);
+
                     dSubType = DeviceSubType.SB;
                     DI.Add(new IOChannel("DI", -1, -1, -1, ""));
                     break;
@@ -89,6 +92,7 @@ namespace EplanDevice
                                 {Tag.ST, 1},
                                 {Tag.M, 1},
                                 {Parameter.P_DT, 1},
+                                {Parameter.P_DTO, 1},
                             };
 
                         case DeviceSubType.SB_VIRT:

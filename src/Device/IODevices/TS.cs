@@ -30,6 +30,7 @@ namespace EplanDevice
 
                 case "TS":
                     parameters.Add(Parameter.P_DT, null);
+                    parameters.Add(Parameter.P_DTO, -1);
 
                     DI.Add(new IOChannel("DI", -1, -1, -1, ""));
                     break;
@@ -93,6 +94,7 @@ namespace EplanDevice
                                 {Tag.ST, 1},
                                 {Tag.M, 1},
                                 {Parameter.P_DT, 1},
+                                {Parameter.P_DTO, 1},
                             };
 
                         case DeviceSubType.TS_VIRT:

@@ -26,12 +26,14 @@ namespace EplanDevice
             {
                 case "LS_MIN":
                     parameters.Add(Parameter.P_DT, null);
+                    parameters.Add(Parameter.P_DTO, -1);
 
                     DI.Add(new IOChannel("DI", -1, -1, -1, ""));
                     break;
 
                 case "LS_MAX":
                     parameters.Add(Parameter.P_DT, null);
+                    parameters.Add(Parameter.P_DTO, -1);
 
                     DI.Add(new IOChannel("DI", -1, -1, -1, ""));
                     break;
@@ -39,6 +41,7 @@ namespace EplanDevice
                 case "LS_IOLINK_MIN":
                     parameters.Add(Parameter.P_DT, null);
                     parameters.Add(Parameter.P_ERR, null);
+                    parameters.Add(Parameter.P_DTO, -1);
 
                     AI.Add(new IOChannel("AI", -1, -1, -1, ""));
                     SetIOLinkSizes(ArticleName);
@@ -47,6 +50,7 @@ namespace EplanDevice
                 case "LS_IOLINK_MAX":
                     parameters.Add(Parameter.P_DT, null);
                     parameters.Add(Parameter.P_ERR, null);
+                    parameters.Add(Parameter.P_DTO, -1);
 
                     AI.Add(new IOChannel("AI", -1, -1, -1, ""));
                     SetIOLinkSizes(ArticleName);
@@ -145,6 +149,14 @@ namespace EplanDevice
                     {
                         case DeviceSubType.LS_MIN:
                         case DeviceSubType.LS_MAX:
+                            return new Dictionary<ITag, int>()
+                            {
+                                {Tag.ST, 1},
+                                {Tag.M, 1},
+                                {Parameter.P_DT, 1},
+                                {Parameter.P_DTO, 1},
+                            };
+
                         case DeviceSubType.LS_VIRT:
                             return new Dictionary<ITag, int>()
                             {
@@ -162,6 +174,7 @@ namespace EplanDevice
                                 {Tag.V, 1},
                                 {Parameter.P_DT, 1},
                                 {Parameter.P_ERR, 1},
+                                {Parameter.P_DTO, 1},
                             };
                     }
                     break;

@@ -118,6 +118,7 @@ namespace Tests.EplanDevices
                 {IODevice.Tag.ST, 1},
                 {IODevice.Tag.M, 1},
                 {IODevice.Parameter.P_DT, 1},
+                {IODevice.Parameter.P_DTO, 1},
             };
 
             var exportForGSVirt = new Dictionary<ITag, int>()
@@ -164,7 +165,8 @@ namespace Tests.EplanDevices
         {
             var defaultParameters = new string[]
             {
-                IODevice.Parameter.P_DT
+                IODevice.Parameter.P_DT,
+                IODevice.Parameter.P_DTO
             };
 
             return new object[]

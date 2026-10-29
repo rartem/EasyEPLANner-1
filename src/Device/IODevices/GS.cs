@@ -27,6 +27,7 @@ namespace EplanDevice
                 case "GS":
                 case "":
                     parameters.Add(Parameter.P_DT, null);
+                    parameters.Add(Parameter.P_DTO, -1);
 
                     dSubType = DeviceSubType.GS;
 
@@ -35,6 +36,7 @@ namespace EplanDevice
 
                 case "GS_INVERSE":
                     parameters.Add(Parameter.P_DT, null);
+                    parameters.Add(Parameter.P_DTO, -1);
 
                     dSubType = DeviceSubType.GS_INVERSE;
 
@@ -104,6 +106,7 @@ namespace EplanDevice
                                 {Tag.ST, 1},
                                 {Tag.M, 1},
                                 {Parameter.P_DT, 1},
+                                {Parameter.P_DTO, 1},
                             };
 
                         case DeviceSubType.GS_VIRT:

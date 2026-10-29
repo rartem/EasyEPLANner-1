@@ -27,6 +27,7 @@ namespace EplanDevice
                 case "FS":
                 case "":
                     parameters.Add(Parameter.P_DT, null);
+                    parameters.Add(Parameter.P_DTO, -1);
 
                     dSubType = DeviceSubType.FS;
 
@@ -93,6 +94,7 @@ namespace EplanDevice
                                 {Tag.ST, 1},
                                 {Tag.M, 1},
                                 {Parameter.P_DT, 1},
+                                {Parameter.P_DTO, 1},
                             };
 
                         case DeviceSubType.FS_VIRT:

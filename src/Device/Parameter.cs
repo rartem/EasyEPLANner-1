@@ -47,6 +47,11 @@ namespace EplanDevice
                 new(nameof(P_DT), "Время порогового фильтра",
                     UnitFormat.Milliseconds);
 
+            /// <summary> Задержка выключения входа; -1 - использовать P_DT. </summary>
+            public static readonly Parameter P_DTO =
+                new(nameof(P_DTO), "Задержка выключения (-1: P_DT)",
+                    UnitFormat.Milliseconds);
+
             /// <summary> Время включения. </summary>
             public static readonly Parameter P_ON_TIME = 
                 new(nameof(P_ON_TIME), "Время включения", 

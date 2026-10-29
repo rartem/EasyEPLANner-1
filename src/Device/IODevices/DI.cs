@@ -28,6 +28,7 @@ namespace EplanDevice
                 case "DI":
                 case "":
                     parameters.Add(Parameter.P_DT, null);
+                    parameters.Add(Parameter.P_DTO, -1);
 
                     dSubType = DeviceSubType.DI;
 
@@ -77,6 +78,7 @@ namespace EplanDevice
                                 {Tag.ST, 1},
                                 {Tag.M, 1},
                                 {Parameter.P_DT, 1},
+                                {Parameter.P_DTO, 1},
                             };
 
                         case DeviceSubType.DI_VIRT:

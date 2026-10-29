@@ -130,6 +130,7 @@ namespace Tests.EplanDevices
                 {IODevice.Tag.V, 1},
                 {IODevice.Parameter.P_DT, 1},
                 {IODevice.Parameter.P_ERR, 1},
+                {IODevice.Parameter.P_DTO, 1},
             };
 
             var exportForLS = new Dictionary<ITag, int>()
@@ -137,13 +138,19 @@ namespace Tests.EplanDevices
                 {IODevice.Tag.ST, 1},
                 {IODevice.Tag.M, 1},
                 {IODevice.Parameter.P_DT, 1},
+                {IODevice.Parameter.P_DTO, 1},
             };
 
             return new object[]
             {
                 new object[] {exportForLS, LS_MIN, GetRandomLSDevice()},
                 new object[] {exportForLS, LS_MAX, GetRandomLSDevice()},
-                new object[] {exportForLS, LS_VIRT, GetRandomLSDevice()},
+                new object[] {new Dictionary<ITag, int>()
+                    {
+                        {IODevice.Tag.ST, 1},
+                        {IODevice.Tag.M, 1},
+                        {IODevice.Parameter.P_DT, 1},
+                    }, LS_VIRT, GetRandomLSDevice()},
                 new object[] {exportForIOLinkLS, LS_IOLINK_MIN,
                     GetRandomLSDevice()},
                 new object[] {exportForIOLinkLS, LS_IOLINK_MAX,
@@ -218,13 +225,15 @@ namespace Tests.EplanDevices
         {
             var defaultParameters = new string[]
             {
-                IODevice.Parameter.P_DT
+                IODevice.Parameter.P_DT,
+                IODevice.Parameter.P_DTO
             };
 
             var iolinkParameters = new string[]
             {
                 IODevice.Parameter.P_DT,
                 IODevice.Parameter.P_ERR,
+                IODevice.Parameter.P_DTO,
             };
 
             return new object[]
