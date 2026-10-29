@@ -203,6 +203,14 @@ namespace InterprojectExchange
         /// <returns></returns>
         public List<string> GetDevicesList()
         {
+            return GetSupportedDeviceTypes();
+        }
+
+        /// <summary>
+        /// Типы фильтра без создания конфигурации и обращения к EPLAN.
+        /// </summary>
+        public static List<string> GetSupportedDeviceTypes()
+        {
             var devices = new List<string>();
             var virtualDevices = new List<string>();
 
@@ -248,6 +256,28 @@ namespace InterprojectExchange
         public static void ResetFilter()
         {
             filterConfiguration = null;
+        }
+
+        /// <summary>
+        /// Применить настройки к уже открытому межпроектному обмену.
+        /// </summary>
+        public static void ReloadIfLoaded(string configurationPath)
+        {
+            var filter = filterConfiguration;
+            if (filter == null || !string.Equals(
+                Path.GetFullPath(filter.pathToConfig),
+                Path.GetFullPath(configurationPath),
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            filter.Read();
+            if (filter.filterForm != null && !filter.filterForm.IsDisposed)
+            {
+                filter.filterForm.ReloadSettings();
+            }
+            filter.SignalsFilterChanged?.Invoke(true);
         }
 
         /// <summary>

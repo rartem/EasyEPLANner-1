@@ -2,6 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 namespace PInvoke
 {
@@ -13,13 +14,15 @@ namespace PInvoke
         [DllImport("kernel32")]
         private static extern long WritePrivateProfileInt(String section,
             String key, int value, String filePath);
-        [DllImport("kernel32")]
-        private static extern long WritePrivateProfileString(String section,
+        [DllImport("kernel32", CharSet = CharSet.Unicode,
+            SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool WritePrivateProfileString(String section,
             String key, String value, String filePath);
         [DllImport("kernel32")]
         private static extern int GetPrivateProfileInt(String section,
             String key, int defaultVal, String filePath);
-        [DllImport("kernel32")]
+        [DllImport("kernel32", CharSet = CharSet.Unicode)]
         private static extern int GetPrivateProfileString(String section,
             String key, String defaultVal, StringBuilder retVal, int size,
             String filePath);
@@ -46,8 +49,9 @@ namespace PInvoke
 
         public String ReadString(String section, String key, String defaultVal)
         {
-            StringBuilder StrBu = new StringBuilder(255);
-            GetPrivateProfileString(section, key, defaultVal, StrBu, 255, file);
+            StringBuilder StrBu = new StringBuilder(32768);
+            GetPrivateProfileString(section, key, defaultVal, StrBu,
+                StrBu.Capacity, file);
             return StrBu.ToString();
         }
 
@@ -58,7 +62,10 @@ namespace PInvoke
 
         public void WriteString(String section, String key, String value)
         {
-            WritePrivateProfileString(section, key, value, file);
+            if (!WritePrivateProfileString(section, key, value, file))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
         }
 
         public void WriteInt(String section, String key, int value)

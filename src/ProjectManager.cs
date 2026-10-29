@@ -273,16 +273,11 @@ namespace EasyEPlanner
             {
                 string path = Path.Combine(GetOriginalAssemblyPath(), StaticHelper.CommonConst.ConfigFileName);
 
-                PInvoke.IniFile iniFile = new PInvoke.IniFile(path);
                 if (File.Exists(path))
                 {
-                    var cyrillic = Encoding.GetEncoding("Windows-1251");
-
-                    return cyrillic.GetString(
-                        Encoding.Convert(
-                            Encoding.GetEncoding("UTF-8"),
-                            cyrillic,
-                            cyrillic.GetBytes(iniFile.ReadString("path", key, ""))));
+                    var setting = AddInSettings.Definitions.First(item =>
+                        item.Section == "path" && item.Key == key);
+                    return AddInSettings.Load(path)[setting];
                 }
             }
             catch
@@ -760,7 +755,7 @@ namespace EasyEPlanner
             var configFile = new PInvoke.IniFile(Path.Combine(
                 path,
                 StaticHelper.CommonConst.ConfigFileName));
-            string link = configFile.ReadString("helpSystem", "mainAddress ", 
+            string link = configFile.ReadString("helpSystem", "mainAddress",
                 null);
             if (string.IsNullOrEmpty(link))
             {

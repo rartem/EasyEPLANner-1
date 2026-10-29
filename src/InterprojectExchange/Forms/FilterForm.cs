@@ -22,6 +22,14 @@ namespace InterprojectExchange
         private FilterConfiguration filterConfiguration;
 
         /// <summary>
+        /// Обновить значения после изменения общих настроек надстройки.
+        /// </summary>
+        internal void ReloadSettings()
+        {
+            SetUpFilterCheckBoxes(filterConfiguration);
+        }
+
+        /// <summary>
         /// Кнопка "Отмена"
         /// </summary>
         /// <param name="sender"></param>

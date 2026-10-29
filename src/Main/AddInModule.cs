@@ -104,8 +104,13 @@ namespace EasyEPlanner
                 false, false);
 
             menuID = oMenu.AddMenuItem(
+                "Настройки", nameof(ShowSettingsAction),
+                "Настройки надстройки EasyEPLANner", menuID, 1,
+                true, false);
+
+            menuID = oMenu.AddMenuItem(
                 "Обновления", nameof(OpenUpdater),
-                "", menuID, 1, true, false);
+                "", menuID, 1, false, false);
 
             menuID = oMenu.AddMenuItem("О дополнении", "AboutProgramm", "", 
                 menuID, 1, false, false);
